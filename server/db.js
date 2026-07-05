@@ -1,0 +1,208 @@
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const { DatabaseSync } = require('node:sqlite');
+
+const db = new DatabaseSync(path.join(__dirname, 'data.db'));
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS employees (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  emp_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  rfid_tag TEXT UNIQUE NOT NULL,
+  department TEXT,
+  shift TEXT
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  room TEXT NOT NULL,
+  rack TEXT NOT NULL,
+  unit TEXT,
+  qty INTEGER NOT NULL,
+  expiry_date TEXT
+);
+
+CREATE TABLE IF NOT EXISTS movements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  emp_id TEXT NOT NULL,
+  employee_name TEXT NOT NULL,
+  room TEXT NOT NULL,
+  rack TEXT NOT NULL,
+  product_id TEXT,
+  product_name TEXT NOT NULL,
+  action TEXT NOT NULL,
+  entry_time TEXT,
+  exit_time TEXT,
+  duration TEXT,
+  status TEXT NOT NULL
+);
+`);
+
+function seedIfEmpty() {
+  const adminCount = db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
+  if (adminCount === 0) {
+    const username = process.env.ADMIN_USERNAME || 'admin';
+    const password = process.env.ADMIN_PASSWORD || 'admin123';
+    const hash = bcrypt.hashSync(password, 10);
+    db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run(username, hash);
+  }
+
+  const empCount = db.prepare('SELECT COUNT(*) AS c FROM employees').get().c;
+  if (empCount === 0) {
+    const insert = db.prepare(
+      'INSERT INTO employees (emp_id, name, rfid_tag, department, shift) VALUES (?, ?, ?, ?, ?)'
+    );
+    const employees = [
+      ['EMP001', 'Akash', 'RFID1001', 'Inventory', '09:00-03:00'],
+      ['EMP002', 'Rahul', 'RFID1002', 'Warehouse', '09:00-03:00'],
+      ['EMP003', 'Arjun', 'RFID1003', 'Stock Control', '09:00-03:00'],
+      ['EMP004', 'Priya', 'RFID1004', 'Packing', '09:00-03:00'],
+      ['EMP005', 'Karthik', 'RFID1005', 'Logistics', '09:00-03:00'],
+    ];
+    db.exec('BEGIN');
+    employees.forEach((r) => insert.run(...r));
+    db.exec('COMMIT');
+  }
+
+  const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;
+  if (productCount === 0) {
+    const insert = db.prepare(
+      'INSERT INTO products (product_id, name, room, rack, unit, qty, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    const products = [
+      // Room 1 - Stationery
+      ['ST001', 'A4 Paper Bundle', 'Room 1', 'A', 'Pack', 120, null],
+      ['ST002', 'Ball Pen (Blue)', 'Room 1', 'A', 'Box', 250, null],
+      ['ST003', 'Pencil HB', 'Room 1', 'A', 'Box', 180, null],
+      ['ST004', 'Permanent Marker', 'Room 1', 'B', 'Box', 75, null],
+      ['ST005', 'Highlighter Set', 'Room 1', 'B', 'Pack', 60, null],
+      ['ST006', 'Sticky Notes', 'Room 1', 'B', 'Pack', 90, null],
+      ['ST007', 'Notebook A5', 'Room 1', 'C', 'Piece', 150, null],
+      ['ST008', 'File Folder', 'Room 1', 'C', 'Piece', 95, null],
+      ['ST009', 'Stapler', 'Room 1', 'D', 'Piece', 40, null],
+      ['ST010', 'Staple Pins', 'Room 1', 'D', 'Box', 140, null],
+      ['ST011', 'Glue Stick', 'Room 1', 'E', 'Piece', 85, '2026-12-15'],
+      ['ST012', 'White Glue', 'Room 1', 'E', 'Bottle', 55, '2027-01-20'],
+      // Room 2 - Craft Materials
+      ['CR001', 'Color Paper Pack', 'Room 2', 'A', 'Pack', 110, null],
+      ['CR002', 'Foam Sheets', 'Room 2', 'A', 'Pack', 95, null],
+      ['CR003', 'Glitter Paper', 'Room 2', 'A', 'Pack', 80, null],
+      ['CR004', 'Craft Scissors', 'Room 2', 'B', 'Piece', 45, null],
+      ['CR005', 'Decorative Tape', 'Room 2', 'B', 'Roll', 125, null],
+      ['CR006', 'Satin Ribbon', 'Room 2', 'C', 'Roll', 180, null],
+      ['CR007', 'Jute Rope', 'Room 2', 'C', 'Roll', 70, null],
+      ['CR008', 'Artificial Flowers', 'Room 2', 'D', 'Bundle', 90, null],
+      ['CR009', 'Hot Glue Gun', 'Room 2', 'D', 'Piece', 20, null],
+      ['CR010', 'Glue Sticks (Hot Melt)', 'Room 2', 'E', 'Pack', 150, '2027-03-05'],
+      ['CR011', 'Wooden Ice Cream Sticks', 'Room 2', 'E', 'Pack', 130, null],
+      ['CR012', 'Colored Beads', 'Room 2', 'E', 'Box', 75, null],
+      // Room 3 - Decoration Products
+      ['DC001', 'LED Fairy Lights', 'Room 3', 'A', 'Box', 65, null],
+      ['DC002', 'Balloon Pack', 'Room 3', 'A', 'Pack', 220, '2026-12-10'],
+      ['DC003', 'Birthday Banner', 'Room 3', 'A', 'Piece', 80, null],
+      ['DC004', 'Party Streamers', 'Room 3', 'B', 'Roll', 160, null],
+      ['DC005', 'Gift Wrapping Paper', 'Room 3', 'B', 'Roll', 130, null],
+      ['DC006', 'Gift Boxes', 'Room 3', 'C', 'Piece', 95, null],
+      ['DC007', 'Decorative Candles', 'Room 3', 'C', 'Box', 70, '2027-01-15'],
+      ['DC008', 'Artificial Garland', 'Room 3', 'D', 'Piece', 45, null],
+      ['DC009', 'Thermocol Letters', 'Room 3', 'D', 'Set', 55, null],
+      ['DC010', 'Acrylic Paint Set', 'Room 3', 'E', 'Box', 60, '2027-05-18'],
+      ['DC011', 'Paint Brushes Set', 'Room 3', 'E', 'Set', 90, null],
+      ['DC012', 'Decorative Stickers', 'Room 3', 'E', 'Pack', 175, null],
+    ];
+    db.exec('BEGIN');
+    products.forEach((r) => insert.run(...r));
+    db.exec('COMMIT');
+  }
+
+  const movementCount = db.prepare('SELECT COUNT(*) AS c FROM movements').get().c;
+  if (movementCount === 0) {
+    const insert = db.prepare(
+      `INSERT INTO movements (date, emp_id, employee_name, room, rack, product_id, product_name, action, entry_time, exit_time, duration, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+
+    // Each employee patrols every rack (A-E) of their home room across the 9:00-3:00 shift,
+    // so a full shift produces 5 RFID in/out events per employee per day.
+    const RACK_PRODUCT = {
+      'Room 1': { A: ['ST001', 'A4 Paper Bundle'], B: ['ST004', 'Permanent Marker'], C: ['ST007', 'Notebook A5'], D: ['ST009', 'Stapler'], E: ['ST011', 'Glue Stick'] },
+      'Room 2': { A: ['CR001', 'Color Paper Pack'], B: ['CR004', 'Craft Scissors'], C: ['CR006', 'Satin Ribbon'], D: ['CR008', 'Artificial Flowers'], E: ['CR010', 'Glue Sticks (Hot Melt)'] },
+      'Room 3': { A: ['DC002', 'Balloon Pack'], B: ['DC004', 'Party Streamers'], C: ['DC006', 'Gift Boxes'], D: ['DC008', 'Artificial Garland'], E: ['DC010', 'Acrylic Paint Set'] },
+    };
+
+    const employeeSchedule = [
+      { emp: 'EMP001', name: 'Akash', room: 'Room 1', rackOrder: ['A', 'B', 'C', 'D', 'E'], times: ['09:05', '10:10', '11:20', '12:40', '14:10'] },
+      { emp: 'EMP002', name: 'Rahul', room: 'Room 1', rackOrder: ['C', 'D', 'E', 'A', 'B'], times: ['09:15', '10:25', '11:40', '12:55', '14:20'] },
+      { emp: 'EMP003', name: 'Arjun', room: 'Room 2', rackOrder: ['B', 'C', 'D', 'E', 'A'], times: ['09:10', '10:30', '11:45', '13:00', '14:15'] },
+      { emp: 'EMP004', name: 'Priya', room: 'Room 3', rackOrder: ['A', 'C', 'E', 'B', 'D'], times: ['09:20', '10:35', '11:50', '13:10', '14:25'] },
+      { emp: 'EMP005', name: 'Karthik', room: 'Room 3', rackOrder: ['D', 'E', 'A', 'C', 'B'], times: ['09:25', '10:40', '12:00', '13:20', '14:30'] },
+    ];
+    const durations = [5, 7, 4, 6, 8]; // minutes, one per slot
+
+    function addMinutes(hhmm, mins) {
+      const [h, m] = hhmm.split(':').map(Number);
+      const total = h * 60 + m + mins;
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+
+    // Source log spans 30-06-2026 through today - RFID events only exist once an
+    // employee has actually scanned in, so future dates get no rows at all.
+    const today = '2026-07-05';
+    const logDates = ['2026-06-30', ...Array.from({ length: 10 }, (_, i) => `2026-07-${String(i + 1).padStart(2, '0')}`)].filter(
+      (date) => date <= today
+    );
+
+    db.exec('BEGIN');
+    logDates.forEach((date) => {
+      employeeSchedule.forEach((employee) => {
+        employee.rackOrder.forEach((rack, slot) => {
+          const [productId, productName] = RACK_PRODUCT[employee.room][rack];
+          const entry = employee.times[slot];
+          const duration = durations[slot];
+          const isLastSlot = slot === employee.rackOrder.length - 1;
+
+          let exit = addMinutes(entry, duration);
+          let durationLabel = `${duration} mins`;
+          let status = 'Completed';
+
+          if (date === today && employee.emp === 'EMP003' && isLastSlot) {
+            // Arjun's most recent scan today hasn't been checked out yet.
+            exit = null;
+            durationLabel = null;
+            status = 'In Progress';
+          }
+
+          insert.run(
+            date,
+            employee.emp,
+            employee.name,
+            employee.room,
+            rack,
+            productId,
+            productName,
+            slot % 2 === 0 ? 'Taken' : 'Placed',
+            entry,
+            exit,
+            durationLabel,
+            status
+          );
+        });
+      });
+    });
+    db.exec('COMMIT');
+  }
+}
+
+seedIfEmpty();
+
+module.exports = db;
