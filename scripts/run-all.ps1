@@ -1,12 +1,10 @@
-# Supervises the Smart Inventory backend, frontend, and public Cloudflare tunnel.
-# Restarts any of the three if it dies, and keeps the current public URL written to tunnel-url.txt.
+# Supervises the Smart Inventory backend and frontend (localhost only).
+# Restarts either one if it dies.
 
 $root = Split-Path -Parent $PSScriptRoot
 $serverDir = Join-Path $root "server"
 $clientDir = Join-Path $root "client"
-$cloudflared = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 $logDir = Join-Path $root ".run-logs"
-$urlFile = Join-Path $root "tunnel-url.txt"
 
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
@@ -27,7 +25,6 @@ function Test-ProcessAlive($processVar) {
 
 $backendProc = $null
 $frontendProc = $null
-$tunnelProc = $null
 
 while ($true) {
     if (-not (Test-ProcessAlive $backendProc) -and -not (Test-Port 4000)) {
@@ -44,28 +41,6 @@ while ($true) {
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput (Join-Path $logDir "frontend.log") `
             -RedirectStandardError (Join-Path $logDir "frontend.err.log")
-    }
-
-    if (-not (Test-ProcessAlive $tunnelProc)) {
-        Write-Host "$(Get-Date -Format o) Starting cloudflared tunnel..."
-        $tunnelLog = Join-Path $logDir "tunnel.err.log"
-        Remove-Item $tunnelLog -ErrorAction SilentlyContinue
-        $tunnelProc = Start-Process -FilePath $cloudflared -ArgumentList "tunnel --url http://localhost:5173" `
-            -WindowStyle Hidden -PassThru `
-            -RedirectStandardOutput (Join-Path $logDir "tunnel.log") `
-            -RedirectStandardError $tunnelLog
-
-        # Wait for the assigned trycloudflare.com URL to appear in the log, then record it.
-        for ($i = 0; $i -lt 20; $i++) {
-            Start-Sleep -Seconds 1
-            $line = Select-String -Path $tunnelLog -Pattern "https://[a-z0-9-]+\.trycloudflare\.com" -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($line) {
-                $url = ($line.Matches[0].Value)
-                Set-Content -Path $urlFile -Value $url
-                Write-Host "$(Get-Date -Format o) Tunnel URL: $url"
-                break
-            }
-        }
     }
 
     Start-Sleep -Seconds 15

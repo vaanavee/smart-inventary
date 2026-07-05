@@ -1,5 +1,10 @@
 const TOKEN_KEY = 'sim_admin_token';
 
+// In local dev, Vite's proxy forwards /api to the backend, so a relative path works.
+// In production (static build), there is no dev-server proxy, so the deployed backend's
+// URL must be supplied at build time via VITE_API_BASE_URL.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -19,7 +24,7 @@ async function request(path, { auth = false, ...options } = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
   if (res.status === 401 && auth) {
     clearToken();
     window.location.href = '/login';
