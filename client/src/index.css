@@ -445,6 +445,57 @@ tbody tr:hover td { background: #fbeecb; }
 .scan-result.scan-out { border-top-color: var(--steel-2); }
 .scan-result.scan-out h2 { color: var(--steel-2); }
 
+.camera-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+
+.camera-feed {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px),
+    linear-gradient(160deg, #1c2027, #2a2f38);
+  border: 1px solid var(--steel-2);
+  border-radius: 4px;
+  color: #e9e7e0;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.camera-feed.active { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.camera-feed-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 11px; }
+
+.camera-rec { color: #ff5c5c; letter-spacing: 0.05em; }
+
+.camera-clock { color: #c9c6bd; }
+
+.camera-feed-label {
+  font-family: var(--font-display);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.camera-feed-sub { font-family: var(--font-mono); font-size: 11px; color: #9aa0aa; }
+.camera-flag { color: var(--amber); }
+
+.rack-cam {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--green);
+  border-radius: 3px;
+  padding: 12px;
+}
+.rack-cam.rack-cam-mismatch { border-top-color: var(--red); }
+
+.rack-cam-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+.rack-cam-counts { display: flex; gap: 16px; }
+.rack-cam-num { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--steel); }
+
 .stat-row { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
 .stat-box { background: #efe9db; border-radius: 4px; padding: 12px 16px; min-width: 120px; }
 .stat-box .num { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--steel); }

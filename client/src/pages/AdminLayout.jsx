@@ -18,6 +18,7 @@ export default function AdminLayout() {
           <Link to="/admin/stock">Stock</Link>
           <Link to="/admin/dates">Date</Link>
           <Link to="/admin/scan">Scan</Link>
+          <Link to="/admin/cctv">CCTV</Link>
           <button onClick={handleLogout}>Logout</button>
         </nav>
       </div>

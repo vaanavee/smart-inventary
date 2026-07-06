@@ -55,4 +55,5 @@ export const api = {
     request('/room-entries/scan', { method: 'POST', body: JSON.stringify({ rfidTag, room }), auth: true }),
   getRoomEntries: (date) => request(`/room-entries?date=${date}`, { auth: true }),
   getCurrentRoomEntries: () => request('/room-entries/current', { auth: true }),
+  getCctvOverview: () => request('/cctv/overview', { auth: true }),
 };
