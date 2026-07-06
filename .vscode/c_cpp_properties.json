@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "name": "ESP32",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/Users/apple/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10/cores/esp32",
+        "/Users/apple/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10/variants/esp32",
+        "/Users/apple/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10/libraries/**",
+        "/Users/apple/Library/Arduino15/packages/esp32/tools/esp32-libs/3.3.10/esp32/include/**",
+        "/Users/apple/Documents/Arduino/libraries/**"
+      ],
+      "defines": [
+        "ARDUINO=10607",
+        "ARDUINO_ARCH_ESP32",
+        "ESP32",
+        "ARDUINO_ESP32_DEV"
+      ],
+      "compilerPath": "/Users/apple/Library/Arduino15/packages/esp32/tools/esp-x32/2601/bin/xtensa-esp32-elf-g++",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "gcc-x64"
+    }
+  ],
+  "version": 4
+}
