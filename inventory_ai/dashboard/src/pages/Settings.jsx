@@ -1,20 +1,87 @@
+import { Camera, Cpu, Sliders, Bell, Palette, Info, Server } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
+
+const SETTINGS = [
+  {
+    icon: Camera,
+    tone: "primary",
+    title: "Camera",
+    desc: "Camera source, resolution, and reconnect behavior are configured via INV_CAMERA_SOURCE, INV_CAMERA_WIDTH, and INV_CAMERA_HEIGHT in backend/config/settings.py.",
+  },
+  {
+    icon: Cpu,
+    tone: "violet",
+    title: "AI Model",
+    desc: "RT-DETR checkpoint and inference device are set via INV_RTDETR_CHECKPOINT and INV_RTDETR_DEVICE. Fine-tuned checkpoints can be swapped in without code changes.",
+  },
+  {
+    icon: Sliders,
+    tone: "warning",
+    title: "Confidence Threshold",
+    desc: "Minimum detection confidence is controlled by INV_RTDETR_CONFIDENCE_THRESHOLD (default 0.5). Lower values increase recall at the cost of false positives.",
+  },
+  {
+    icon: Bell,
+    tone: "danger",
+    title: "Notifications",
+    desc: "Low-stock and mismatch alerts are generated automatically and surfaced on the Home dashboard and Alerts API.",
+  },
+  {
+    icon: Palette,
+    tone: "info",
+    title: "Theme",
+    desc: "This dashboard uses the WisRight enterprise theme — orange primary accents on a light, glassmorphic surface.",
+  },
+  {
+    icon: Server,
+    tone: "success",
+    title: "System Information",
+    desc: "Backend: FastAPI + SQLite. Detection: RT-DETR (transformers). Frontend: React + Tailwind + Chart.js.",
+  },
+];
+
+const ICON_BG = {
+  primary: "bg-gradient-to-br from-primary to-primary-light",
+  violet: "bg-gradient-to-br from-violet to-purple-400",
+  warning: "bg-gradient-to-br from-warning to-amber-400",
+  danger: "bg-gradient-to-br from-danger to-rose-400",
+  info: "bg-gradient-to-br from-info to-sky-400",
+  success: "bg-gradient-to-br from-success to-emerald-400",
+};
+
 export default function Settings() {
   return (
-    <div className="flex flex-col gap-4 max-w-xl">
-      <h2 className="text-xl font-semibold">Settings</h2>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-sm space-y-3">
-        <p className="text-slate-400">
-          Camera source, RT-DETR checkpoint, confidence threshold, and other
-          runtime settings are configured server-side in
-          <code className="mx-1 px-1.5 py-0.5 bg-slate-800 rounded">inventory_ai/backend/config/settings.py</code>
-          (or via environment variables prefixed <code className="px-1.5 py-0.5 bg-slate-800 rounded">INV_</code>).
-        </p>
-        <p className="text-slate-400">
-          To switch from the laptop webcam to a USB or industrial camera, set
-          <code className="mx-1 px-1.5 py-0.5 bg-slate-800 rounded">INV_CAMERA_SOURCE</code>
-          to the new device index or stream URI and restart the backend — no
-          frontend changes are required.
-        </p>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Settings" subtitle="System configuration and preferences" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 stagger">
+        {SETTINGS.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.title} className="card card-hover p-6 flex gap-4">
+              <div className={`w-12 h-12 shrink-0 rounded-xl ${ICON_BG[s.tone]} flex items-center justify-center shadow-soft`}>
+                <Icon size={22} className="text-white" strokeWidth={2} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-ink mb-1">{s.title}</h3>
+                <p className="text-sm text-muted leading-relaxed">{s.desc}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card p-6 flex items-start gap-4">
+        <div className="w-12 h-12 shrink-0 rounded-xl bg-black/[0.04] flex items-center justify-center">
+          <Info size={22} className="text-muted" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-ink mb-1">About</h3>
+          <p className="text-sm text-muted leading-relaxed">
+            WisRight AI Inventory Verification & Stock Monitoring System — real-time product detection,
+            counting, and expected-vs-detected verification using RT-DETR. Version 1.0.0.
+          </p>
+        </div>
       </div>
     </div>
   );

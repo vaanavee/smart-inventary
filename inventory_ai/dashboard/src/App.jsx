@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
+import Topbar from "./components/Topbar.jsx";
 import Home from "./pages/Home.jsx";
 import LiveDetection from "./pages/LiveDetection.jsx";
 import Inventory from "./pages/Inventory.jsx";
@@ -12,21 +13,24 @@ import Settings from "./pages/Settings.jsx";
 
 export default function App() {
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-surface bg-gradient-radial-soft">
       <Sidebar />
-      <main className="flex-1 p-6 overflow-x-hidden">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/live" element={<LiveDetection />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/verification" element={<Verification />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/workers" element={<Workers />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <Topbar />
+        <main className="flex-1 p-8 overflow-x-hidden page-enter">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/live" element={<LiveDetection />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/verification" element={<Verification />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/workers" element={<Workers />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }

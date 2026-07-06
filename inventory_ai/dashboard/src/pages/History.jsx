@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
+import PageHeader from "../components/PageHeader.jsx";
+import Badge from "../components/Badge.jsx";
+import ProgressBar from "../components/ProgressBar.jsx";
 import { api } from "../api/client.js";
+
+const STATUS_TONE = {
+  VERIFIED: "success",
+  WRONG_PRODUCT: "danger",
+  MISSING_PRODUCT: "warning",
+  EXTRA_PRODUCT: "info",
+  UNEXPECTED_PRODUCT: "violet",
+  MIXED_PRODUCTS: "violet",
+};
 
 const STATUSES = [
   "",
@@ -21,48 +33,65 @@ export default function History() {
   }, [status]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Verification History</h2>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="bg-slate-800 rounded-md px-3 py-1.5 text-sm"
-        >
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s || "All Statuses"}</option>
-          ))}
-        </select>
-      </div>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-slate-400 text-left">
-            <tr>
-              <th className="p-3">ID</th>
-              <th>Worker</th>
-              <th>Product</th>
-              <th>Expected</th>
-              <th>Detected</th>
-              <th>Status</th>
-              <th>Confidence</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {transactions.map((t) => (
-              <tr key={t.id}>
-                <td className="p-3">{t.id}</td>
-                <td>{t.worker_id}</td>
-                <td>{t.product_id}</td>
-                <td>{t.expected_quantity}</td>
-                <td>{t.detected_quantity}</td>
-                <td>{t.verification_status}</td>
-                <td>{t.confidence_score}</td>
-                <td className="text-xs text-slate-500">{new Date(t.timestamp).toLocaleString()}</td>
-              </tr>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Verification History"
+        subtitle={`${transactions.length} records`}
+        actions={
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="input-field w-auto">
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s ? s.replace(/_/g, " ") : "All Statuses"}
+              </option>
             ))}
-          </tbody>
-        </table>
+          </select>
+        }
+      />
+
+      <div className="card p-6">
+        <ul className="flex flex-col">
+          {transactions.map((t, i) => (
+            <li key={t.id} className="flex gap-4 pb-6 last:pb-0">
+              <div className="flex flex-col items-center">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor:
+                      { success: "#22C55E", danger: "#EF4444", warning: "#F59E0B", info: "#3B82F6", violet: "#8B5CF6", neutral: "#9CA3AF" }[
+                        STATUS_TONE[t.verification_status] || "neutral"
+                      ],
+                  }}
+                />
+                {i !== transactions.length - 1 && <span className="w-px flex-1 bg-black/[0.06] mt-1" />}
+              </div>
+
+              <div className="flex-1 pb-1">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-ink">Transaction #{t.id}</span>
+                    <Badge tone={STATUS_TONE[t.verification_status] || "neutral"}>
+                      {t.verification_status.replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-muted">{new Date(t.timestamp).toLocaleString()}</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2 text-xs text-muted">
+                  <span>Worker #{t.worker_id}</span>
+                  <span>Product #{t.product_id}</span>
+                  <span>Expected {t.expected_quantity}</span>
+                  <span>Detected {t.detected_quantity}</span>
+                </div>
+
+                <div className="mt-3 max-w-xs flex items-center gap-2">
+                  <ProgressBar value={t.confidence_score * 100} max={100} tone="primary" height="h-1.5" />
+                  <span className="text-xs text-muted whitespace-nowrap">{(t.confidence_score * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            </li>
+          ))}
+          {transactions.length === 0 && <li className="text-sm text-muted py-8 text-center">No records found.</li>}
+        </ul>
       </div>
     </div>
   );

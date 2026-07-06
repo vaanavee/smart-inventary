@@ -2,6 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: "Poppins", system-ui, sans-serif;
+  background: #f7f8fa;
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-soft;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-soft border border-black/[0.03] transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:-translate-y-1 hover:shadow-lift;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-primary text-white font-medium rounded-xl px-5 py-2.5 shadow-soft
+      transition-all duration-300 hover:shadow-lift hover:-translate-y-0.5 active:translate-y-0
+      disabled:opacity-40 disabled:pointer-events-none relative overflow-hidden;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-black/10 text-ink font-medium rounded-xl px-5 py-2.5
+      transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-soft;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .input-field {
+    @apply w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm text-ink
+      placeholder:text-muted transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
+  }
+
+  .page-enter {
+    @apply animate-fadeIn;
+  }
+
+  .stagger > * {
+    @apply animate-slideUp;
+  }
+}
+
+/* Ripple effect for buttons */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 60%);
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.5s ease, opacity 0.6s ease;
+}
+.ripple:active::after {
+  transform: scale(2);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Skeleton loading shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #eceef1 25%, #f5f6f8 37%, #eceef1 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 12px;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }
