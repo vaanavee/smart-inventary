@@ -16,6 +16,7 @@ router.get('/overview', requireAdmin, async (req, res) => {
   
   // Fetch actual detections from Python microservice
   let aiDetections = {};
+  let peopleCounts = {};
   try {
     const aiResponse = await fetch('http://127.0.0.1:5000/api/detect');
     if (aiResponse.ok) {
@@ -25,12 +26,28 @@ router.get('/overview', requireAdmin, async (req, res) => {
           aiDetections[`${d.room}-${d.rack}`] = d.count;
         }
       });
+      peopleCounts = data.people_counts || {};
     }
   } catch (err) {
     console.error("Could not reach Python CV service. Make sure it's running on port 5000.");
   }
 
   ROOMS.forEach((room) => {
+    // YOLO Person Detection logic
+    const personCount = peopleCounts[room] || 0;
+    let identifiedEmployee = null;
+
+    if (personCount > 0) {
+      // Find the last person to scan into this room who hasn't exited (or just the most recent entry)
+      const lastEntry = db.prepare(
+        `SELECT employee_name FROM room_entries WHERE room = ? ORDER BY date DESC, entry_time DESC LIMIT 1`
+      ).get(room);
+      
+      if (lastEntry) {
+        identifiedEmployee = lastEntry.employee_name;
+      }
+    }
+
     RACKS.forEach((rack) => {
       const { count: recordedCount, qty: recordedQty } = db
         .prepare('SELECT COUNT(*) AS count, COALESCE(SUM(qty), 0) AS qty FROM products WHERE room = ? AND rack = ?')
@@ -54,6 +71,8 @@ router.get('/overview', requireAdmin, async (req, res) => {
         aiCount,
         status: aiCount === recordedQty ? 'match' : 'mismatch',
         lastActivity: lastActivity || null,
+        personDetected: personCount > 0,
+        identifiedEmployee: identifiedEmployee
       });
     });
   });

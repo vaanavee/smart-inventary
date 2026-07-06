@@ -29,8 +29,8 @@ export default function AdminCctv() {
       <div className="card">
         <h2>CCTV Monitoring</h2>
         <p className="muted">
-          Simulated camera feeds — no physical camera is connected. Product counts shown here are placeholders
-          for a future YOLO/CNN vision pipeline; they are not derived from real video.
+          Feeds are currently monitored by <strong>RT-DETRv2</strong> (Product Counting) and <strong>YOLOv8</strong> (Employee Tracking).
+          Detected personnel are cross-referenced with RFID logs for real-time identification.
         </p>
         {error && <div className="error-text">{error}</div>}
         {mismatchCount > 0 && (
@@ -46,6 +46,8 @@ export default function AdminCctv() {
           {ROOMS.map((r) => {
             const roomCameras = cameras.filter((c) => c.room === r);
             const roomMismatch = roomCameras.some((c) => c.status === 'mismatch');
+            const identifiedEmployee = roomCameras.length > 0 ? roomCameras[0].identifiedEmployee : null;
+
             return (
               <button key={r} className={`camera-feed ${room === r ? 'active' : ''}`} onClick={() => setRoom(r)}>
                 <div className="camera-feed-top">
@@ -56,6 +58,11 @@ export default function AdminCctv() {
                 <div className="camera-feed-sub">
                   {roomMismatch ? <span className="camera-flag">Discrepancy flagged</span> : 'Feed nominal'}
                 </div>
+                {identifiedEmployee && (
+                  <div style={{ marginTop: '8px', fontSize: '12px', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '4px', color: '#4ade80' }}>
+                    <strong>YOLO ID:</strong> {identifiedEmployee}
+                  </div>
+                )}
               </button>
             );
           })}

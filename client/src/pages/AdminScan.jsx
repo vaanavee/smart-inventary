@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../api.js';
 
 const ROOMS = ['Room 1', 'Room 2', 'Room 3'];
@@ -11,17 +12,36 @@ export default function AdminScan() {
   const [busy, setBusy] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const [useCamera, setUseCamera] = useState(false);
+  const scannerRef = useRef(null);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!tag.trim() || busy) return;
+  useEffect(() => {
+    if (!useCamera) {
+      inputRef.current?.focus();
+      return;
+    }
+
+    // Initialize scanner
+    const scanner = new Html5QrcodeScanner(
+      'reader',
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+
+    scanner.render(onScanSuccess, onScanFailure);
+    scannerRef.current = scanner;
+
+    return () => {
+      scanner.clear().catch(console.error);
+    };
+  }, [useCamera]);
+
+  async function handleScan(code) {
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
-      const data = await api.scanRfid(tag.trim(), room);
+      const data = await api.scanRfid(code.trim(), room);
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -29,8 +49,27 @@ export default function AdminScan() {
     } finally {
       setTag('');
       setBusy(false);
-      inputRef.current?.focus();
+      if (!useCamera) {
+        inputRef.current?.focus();
+      }
     }
+  }
+
+  function onScanSuccess(decodedText, decodedResult) {
+    if (scannerRef.current) {
+      setUseCamera(false); // Stop camera on successful scan
+    }
+    handleScan(decodedText);
+  }
+
+  function onScanFailure(error) {
+    // handle scan failure
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!tag.trim()) return;
+    await handleScan(tag);
   }
 
   return (
@@ -39,8 +78,7 @@ export default function AdminScan() {
         <h2>RFID Door Scan</h2>
         <p className="muted">
           Point a USB/handheld RFID reader at this field (it types the tag like a keyboard), or type a tag ID
-          manually and press Enter. Scanning a tag checks the employee in; scanning the same tag again checks
-          them out.
+          manually and press Enter. You can also use your device camera to scan a QR code representation of the tag.
         </p>
 
         <div className="grid-buttons" style={{ gridTemplateColumns: 'repeat(3, minmax(120px, 1fr))', marginBottom: 18 }}>
@@ -57,6 +95,21 @@ export default function AdminScan() {
           ))}
         </div>
 
+        <div style={{ display: 'flex', gap: 10, marginBottom: 15 }}>
+          <button 
+            className="submit-btn" 
+            style={{ width: 'auto', padding: '8px 16px', background: useCamera ? '#dc3545' : '#0d6efd' }} 
+            onClick={() => setUseCamera(!useCamera)}
+            type="button"
+          >
+            {useCamera ? 'Stop Camera' : 'Start Camera'}
+          </button>
+        </div>
+
+        {useCamera && (
+          <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px auto' }}></div>
+        )}
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
           <input
             ref={inputRef}
@@ -65,8 +118,9 @@ export default function AdminScan() {
             onChange={(e) => setTag(e.target.value)}
             placeholder="Scan or type RFID tag (e.g. RFID1001)"
             autoComplete="off"
+            disabled={useCamera}
           />
-          <button className="submit-btn" style={{ width: 'auto', padding: '10px 22px' }} disabled={busy}>
+          <button className="submit-btn" style={{ width: 'auto', padding: '10px 22px' }} disabled={busy || useCamera}>
             Scan
           </button>
         </form>
