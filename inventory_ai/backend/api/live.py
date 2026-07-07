@@ -1,6 +1,7 @@
 """Live camera + detection endpoints."""
 from __future__ import annotations
 
+import time
 import cv2
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
@@ -53,6 +54,7 @@ def _mjpeg_generator():
     while True:
         frame = camera_stream.get_frame()
         if frame is None:
+            time.sleep(0.1)
             continue
         ok, buffer = cv2.imencode(".jpg", frame)
         if not ok:

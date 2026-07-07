@@ -72,6 +72,29 @@ node = NodeClient()
 
 _last_posted_assignment: dict[int, str | None] = {}
 
+active_viewers = 0
+viewer_lock = threading.Lock()
+
+
+def add_viewer() -> None:
+    global active_viewers
+    with viewer_lock:
+        active_viewers += 1
+        if active_viewers == 1:
+            logger.info("First viewer connected. Starting camera stream...")
+            camera.start()
+
+
+def remove_viewer() -> None:
+    global active_viewers
+    with viewer_lock:
+        active_viewers -= 1
+        if active_viewers <= 0:
+            active_viewers = 0
+            logger.info("No active viewers. Stopping camera stream...")
+            camera.stop()
+
+
 
 def _draw_overlay(frame: np.ndarray, tracked: list[dict]) -> np.ndarray:
     annotated = frame.copy()
@@ -90,7 +113,6 @@ def _draw_overlay(frame: np.ndarray, tracked: list[dict]) -> np.ndarray:
 
 
 def _processing_loop() -> None:
-    camera.start()
     last_session_poll = 0.0
     active_sessions: list[dict] = []
     fps_window: list[float] = []
@@ -183,16 +205,20 @@ def live() -> dict:
 
 
 def _mjpeg_generator():
-    while True:
-        with state.lock:
-            frame = None if state.frame is None else state.frame.copy()
-        if frame is None:
-            time.sleep(0.1)
-            continue
-        ok, buffer = cv2.imencode(".jpg", frame)
-        if not ok:
-            continue
-        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+    add_viewer()
+    try:
+        while True:
+            with state.lock:
+                frame = None if state.frame is None else state.frame.copy()
+            if frame is None:
+                time.sleep(0.1)
+                continue
+            ok, buffer = cv2.imencode(".jpg", frame)
+            if not ok:
+                continue
+            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+    finally:
+        remove_viewer()
 
 
 @app.get("/stream")
@@ -203,12 +229,15 @@ def stream() -> StreamingResponse:
 @app.websocket("/ws/live")
 async def ws_live(websocket: WebSocket) -> None:
     await websocket.accept()
+    add_viewer()
     try:
         while True:
             await websocket.send_json(state.snapshot())
             await asyncio.sleep(0.3)
     except WebSocketDisconnect:
         pass
+    finally:
+        remove_viewer()
 
 
 if __name__ == "__main__":

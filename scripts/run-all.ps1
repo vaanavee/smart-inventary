@@ -3,7 +3,6 @@
 
 $root = Split-Path -Parent $PSScriptRoot
 $serverDir = Join-Path $root "server"
-$clientDir = Join-Path $root "client"
 $logDir = Join-Path $root ".run-logs"
 
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
@@ -24,7 +23,6 @@ function Test-ProcessAlive($processVar) {
 }
 
 $backendProc = $null
-$frontendProc = $null
 
 while ($true) {
     if (-not (Test-ProcessAlive $backendProc) -and -not (Test-Port 4000)) {
@@ -33,14 +31,6 @@ while ($true) {
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput (Join-Path $logDir "backend.log") `
             -RedirectStandardError (Join-Path $logDir "backend.err.log")
-    }
-
-    if (-not (Test-ProcessAlive $frontendProc) -and -not (Test-Port 5173)) {
-        Write-Host "$(Get-Date -Format o) Starting frontend..."
-        $frontendProc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory $clientDir `
-            -WindowStyle Hidden -PassThru `
-            -RedirectStandardOutput (Join-Path $logDir "frontend.log") `
-            -RedirectStandardError (Join-Path $logDir "frontend.err.log")
     }
 
     Start-Sleep -Seconds 15
