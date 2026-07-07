@@ -12,6 +12,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/monitor-api/, "/api"),
       },
+      "/monitor-ai-api": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/monitor-ai-api/, ""),
+        ws: true,
+      },
     },
   },
 });

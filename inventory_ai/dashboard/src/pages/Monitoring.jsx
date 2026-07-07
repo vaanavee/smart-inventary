@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, DoorOpen, Package, Search, AlertCircle } from "lucide-react";
+import { Camera, DoorOpen, Package, Search, AlertCircle, Users, UserX, Gauge, Clock } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 import { monitorApi } from "../api/monitorClient.js";
+
+const AI_BASE_URL = "/monitor-ai-api";
 
 const ROOMS = ["Room 1", "Room 2", "Room 3"];
 const RACKS = ["A", "B", "C", "D", "E"];
@@ -52,63 +54,103 @@ export default function Monitoring() {
 }
 
 function CctvTab() {
-  const [cameras, setCameras] = useState([]);
+  const [live, setLive] = useState(null);
   const [error, setError] = useState(null);
+  const [now, setNow] = useState(new Date());
+  const [streamKey] = useState(() => Date.now());
 
   useEffect(() => {
-    monitorApi
-      .get("/cctv/overview")
-      .then((data) => setCameras(data.cameras))
-      .catch((e) => setError(e.message));
+    const refresh = () => {
+      fetch(`${AI_BASE_URL}/live`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`AI service returned ${res.status}`);
+          return res.json();
+        })
+        .then(setLive)
+        .catch((e) => setError(e.message));
+    };
+    refresh();
+    const poll = setInterval(refresh, 1500);
+    const clock = setInterval(() => setNow(new Date()), 1000);
+    return () => {
+      clearInterval(poll);
+      clearInterval(clock);
+    };
   }, []);
 
-  const byRoom = useMemo(() => {
-    const grouped = {};
-    for (const cam of cameras) {
-      grouped[cam.room] = grouped[cam.room] || [];
-      grouped[cam.room].push(cam);
-    }
-    return grouped;
-  }, [cameras]);
+  const cameraOnline = !!live?.camera_connected;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="card p-4 flex items-start gap-3 bg-info/[0.04] border-info/20">
         <AlertCircle size={18} className="text-info shrink-0 mt-0.5" />
         <p className="text-xs text-muted leading-relaxed">
-          Live video and AI bounding-box overlays are not connected yet — the underlying CV
-          service returns placeholder detection counts. The tiles below show real recorded
-          inventory data, cross-checked against whatever the detection service reports.
+          Identity matching assigns tracked people to active RFID sessions by order of
+          appearance (oldest unassigned check-in claims the next new track) — it is not
+          biometric face recognition, and works best with one new person entering at a time.
         </p>
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      {Object.entries(byRoom).map(([room, racks]) => (
-        <div key={room} className="card p-6">
-          <h3 className="font-semibold text-ink mb-4">{room}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {racks.map((cam) => (
-              <div key={cam.rack} className="rounded-xl border border-hairline/[0.06] p-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-ink">Rack {cam.rack}</span>
-                  <Badge tone={cam.status === "match" ? "success" : "warning"}>{cam.status}</Badge>
-                </div>
-                <p className="text-xs text-muted">Recorded: {cam.recordedQty}</p>
-                <p className="text-xs text-muted">AI Count: {cam.aiCount}</p>
-                {cam.personDetected && (
-                  <Badge tone="info">{cam.identifiedEmployee || "Person detected"}</Badge>
-                )}
-                {cam.lastActivity && (
-                  <p className="text-xs text-muted truncate">
-                    Last: {cam.lastActivity.action} {cam.lastActivity.product_name} — {cam.lastActivity.employee_name}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="card p-4 flex flex-col gap-1">
+          <Users size={16} className="text-success" />
+          <p className="text-xs text-muted">Employees</p>
+          <p className="text-lg font-semibold text-ink">{live?.employee_count ?? "—"}</p>
         </div>
-      ))}
+        <div className="card p-4 flex flex-col gap-1">
+          <UserX size={16} className="text-danger" />
+          <p className="text-xs text-muted">Unknown</p>
+          <p className="text-lg font-semibold text-ink">{live?.unknown_count ?? "—"}</p>
+        </div>
+        <div className="card p-4 flex flex-col gap-1">
+          <Gauge size={16} className="text-primary" />
+          <p className="text-xs text-muted">FPS</p>
+          <p className="text-lg font-semibold text-ink">{live?.fps ?? "—"}</p>
+        </div>
+        <div className="card p-4 flex flex-col gap-1">
+          <Camera size={16} className={cameraOnline ? "text-success" : "text-danger"} />
+          <p className="text-xs text-muted">Camera</p>
+          <p className={`text-lg font-semibold ${cameraOnline ? "text-success" : "text-danger"}`}>
+            {cameraOnline ? "Online" : "Offline"}
+          </p>
+        </div>
+        <div className="card p-4 flex flex-col gap-1">
+          <Clock size={16} className="text-muted" />
+          <p className="text-xs text-muted">Time</p>
+          <p className="text-lg font-semibold text-ink">{now.toLocaleTimeString()}</p>
+        </div>
+      </div>
+
+      <div className="card overflow-hidden">
+        <img
+          key={streamKey}
+          src={`${AI_BASE_URL}/stream`}
+          alt={`Live feed — ${live?.room ?? "camera"}`}
+          className="w-full h-auto bg-black block"
+        />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-ink mb-4">Detected People — {live?.room ?? "—"}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(live?.tracks ?? []).map((t) => (
+            <div key={t.tracker_id} className="rounded-xl border border-hairline/[0.06] p-4 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-ink">{t.employee_name || "Unknown Person"}</span>
+                <Badge tone={t.employee_name ? "success" : "danger"}>{t.employee_name ? "Present" : "Unknown"}</Badge>
+              </div>
+              <p className="text-xs text-muted">Tracking ID: {t.tracker_id}</p>
+              {t.entry_time && <p className="text-xs text-muted">Entered: {t.entry_time}</p>}
+              <p className="text-xs text-muted">Confidence: {(t.confidence * 100).toFixed(0)}%</p>
+            </div>
+          ))}
+          {(!live?.tracks || live.tracks.length === 0) && (
+            <p className="text-sm text-muted">No one currently detected in frame.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

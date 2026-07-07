@@ -60,6 +60,26 @@ CREATE TABLE IF NOT EXISTS room_entries (
   duration TEXT,
   status TEXT NOT NULL
 );
+
+-- Latest AI-tracked identity assignment per employee (Phase 2: live monitoring).
+CREATE TABLE IF NOT EXISTS detections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tracking_id INTEGER NOT NULL,
+  emp_id TEXT,
+  confidence REAL,
+  room TEXT NOT NULL,
+  time TEXT NOT NULL
+);
+
+-- Unauthorized/unknown-person events reported by the monitor AI service.
+CREATE TABLE IF NOT EXISTS alerts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,
+  person TEXT,
+  room TEXT NOT NULL,
+  time TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open'
+);
 `);
 
 // Migration: employees table may pre-date the password_hash column (added for

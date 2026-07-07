@@ -15,4 +15,5 @@ faker==26.0.0
 websockets==12.0
 pytest==8.2.2
 httpx==0.27.0
+supervision==0.29.1
 
