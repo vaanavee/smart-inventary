@@ -1,5 +1,6 @@
-import { Camera, Cpu, Sliders, Bell, Palette, Info, Server } from "lucide-react";
+import { Camera, Cpu, Sliders, Bell, Moon, Sun, Info, Server } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 const SETTINGS = [
   {
@@ -27,12 +28,6 @@ const SETTINGS = [
     desc: "Low-stock and mismatch alerts are generated automatically and surfaced on the Home dashboard and Alerts API.",
   },
   {
-    icon: Palette,
-    tone: "info",
-    title: "Theme",
-    desc: "This dashboard uses the WisRight enterprise theme — orange primary accents on a light, glassmorphic surface.",
-  },
-  {
     icon: Server,
     tone: "success",
     title: "System Information",
@@ -50,11 +45,47 @@ const ICON_BG = {
 };
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Settings" subtitle="System configuration and preferences" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 stagger">
+        <div className="card card-hover p-6 flex gap-4">
+          <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-info to-sky-400 flex items-center justify-center shadow-soft">
+            {theme === "dark" ? (
+              <Moon size={22} className="text-white" strokeWidth={2} />
+            ) : (
+              <Sun size={22} className="text-white" strokeWidth={2} />
+            )}
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-ink mb-1">Theme</h3>
+            <p className="text-sm text-muted leading-relaxed mb-3">
+              Switch between the WisRight light and dark enterprise themes. Your choice is saved on this device.
+            </p>
+            <div className="inline-flex rounded-xl bg-hairline/[0.05] p-1 gap-1">
+              <button
+                onClick={() => setTheme("light")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  theme === "light" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+                }`}
+              >
+                <Sun size={14} /> Light
+              </button>
+              <button
+                onClick={() => setTheme("dark")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  theme === "dark" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+                }`}
+              >
+                <Moon size={14} /> Dark
+              </button>
+            </div>
+          </div>
+        </div>
+
         {SETTINGS.map((s) => {
           const Icon = s.icon;
           return (
@@ -72,7 +103,7 @@ export default function Settings() {
       </div>
 
       <div className="card p-6 flex items-start gap-4">
-        <div className="w-12 h-12 shrink-0 rounded-xl bg-black/[0.04] flex items-center justify-center">
+        <div className="w-12 h-12 shrink-0 rounded-xl bg-hairline/[0.04] flex items-center justify-center">
           <Info size={22} className="text-muted" />
         </div>
         <div>

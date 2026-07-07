@@ -62,7 +62,7 @@ export default function History() {
                       ],
                   }}
                 />
-                {i !== transactions.length - 1 && <span className="w-px flex-1 bg-black/[0.06] mt-1" />}
+                {i !== transactions.length - 1 && <span className="w-px flex-1 bg-hairline/[0.06] mt-1" />}
               </div>
 
               <div className="flex-1 pb-1">

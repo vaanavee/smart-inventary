@@ -86,7 +86,7 @@ export default function Workers() {
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-black/[0.05]">
+            <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
               <th className="p-4 pb-3 font-medium">Worker</th>
               <th className="pb-3 font-medium">ID</th>
               <th className="pb-3 font-medium">Department</th>
@@ -94,7 +94,7 @@ export default function Workers() {
           </thead>
           <tbody>
             {filtered.map((w) => (
-              <tr key={w.id} className="border-b border-black/[0.04] last:border-0 hover:bg-primary/[0.03] transition-colors">
+              <tr key={w.id} className="border-b border-hairline/[0.04] last:border-0 hover:bg-primary/[0.03] transition-colors">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-white text-xs font-semibold">

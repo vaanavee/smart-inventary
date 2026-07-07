@@ -31,7 +31,7 @@ const lineOptions = {
   plugins: { legend: { display: false } },
   scales: {
     x: { ticks: { color: "#6B7280", font: { family: "Poppins" } }, grid: { display: false } },
-    y: { ticks: { color: "#6B7280", font: { family: "Poppins" } }, grid: { color: "#F1F2F4" } },
+    y: { ticks: { color: "#6B7280", font: { family: "Poppins" } }, grid: { color: "rgba(128,134,146,0.15)" } },
   },
 };
 
@@ -154,7 +154,7 @@ export default function Home() {
               <p className="text-sm text-muted">All stock levels are healthy.</p>
             </div>
           ) : (
-            <ul className="flex flex-col divide-y divide-black/[0.05]">
+            <ul className="flex flex-col divide-y divide-hairline/[0.05]">
               {lowStock.slice(0, 6).map((p) => (
                 <li key={p.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
@@ -193,7 +193,7 @@ export default function Home() {
                         a.severity === "critical" ? "bg-danger" : "bg-warning"
                       }`}
                     />
-                    <span className="w-px flex-1 bg-black/[0.06] mt-1" />
+                    <span className="w-px flex-1 bg-hairline/[0.06] mt-1" />
                   </div>
                   <div className="pb-1">
                     <p className="text-sm text-ink">{a.message}</p>
@@ -248,7 +248,7 @@ export default function Home() {
           </thead>
           <tbody>
             {recent.map((t) => (
-              <tr key={t.id} className="border-t border-black/[0.05] hover:bg-black/[0.02] transition-colors">
+              <tr key={t.id} className="border-t border-hairline/[0.05] hover:bg-hairline/[0.02] transition-colors">
                 <td className="py-3 text-muted">#{t.id}</td>
                 <td className="py-3 text-ink font-medium">{t.product_id}</td>
                 <td className="py-3">{t.expected_quantity}</td>

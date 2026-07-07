@@ -105,7 +105,7 @@ export default function Inventory() {
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-black/[0.05]">
+            <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
               <th className="p-4 pb-3 font-medium">
                 <button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-ink">
                   Name <ArrowUpDown size={12} />
@@ -124,7 +124,7 @@ export default function Inventory() {
               return (
                 <tr
                   key={p.id}
-                  className={`border-b border-black/[0.04] last:border-0 transition-colors hover:bg-primary/[0.03] ${
+                  className={`border-b border-hairline/[0.04] last:border-0 transition-colors hover:bg-primary/[0.03] ${
                     low ? "bg-primary/[0.04]" : ""
                   }`}
                 >

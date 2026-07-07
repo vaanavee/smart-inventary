@@ -5,7 +5,7 @@ const TONES = {
   info: "bg-info/10 text-info",
   violet: "bg-violet/10 text-violet",
   primary: "bg-primary/10 text-primary",
-  neutral: "bg-black/5 text-muted",
+  neutral: "bg-hairline/5 text-muted",
 };
 
 export default function Badge({ tone = "neutral", children, dot = false }) {

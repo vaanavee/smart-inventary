@@ -77,7 +77,7 @@ export default function LiveDetection() {
             <h3 className="font-semibold text-ink mb-4">Recent Detection Timeline</h3>
             <ul className="flex flex-col gap-3 max-h-64 overflow-y-auto">
               {detections.map((d, i) => (
-                <li key={i} className="flex items-center justify-between text-sm border-b border-black/[0.05] pb-3 last:border-0">
+                <li key={i} className="flex items-center justify-between text-sm border-b border-hairline/[0.05] pb-3 last:border-0">
                   <span className="text-ink font-medium">{d.name}</span>
                   <Badge tone={d.confidence > 0.7 ? "success" : "warning"}>
                     {(d.confidence * 100).toFixed(1)}%
@@ -127,7 +127,7 @@ export default function LiveDetection() {
 
           <div className="card p-5">
             <h3 className="font-semibold text-ink mb-3 text-sm">Detected Products</h3>
-            <ul className="flex flex-col divide-y divide-black/[0.05]">
+            <ul className="flex flex-col divide-y divide-hairline/[0.05]">
               {Object.entries(counts).map(([name, count]) => (
                 <li key={name} className="py-2.5 flex items-center justify-between text-sm">
                   <span className="text-ink">{name}</span>

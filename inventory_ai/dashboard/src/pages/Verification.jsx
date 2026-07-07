@@ -86,7 +86,7 @@ export default function Verification() {
 
             <div
               className={`relative mt-2 rounded-2xl border-2 border-dashed p-8 flex flex-col items-center justify-center gap-3 transition-colors ${
-                loading ? "border-primary bg-primary/[0.04]" : "border-black/10"
+                loading ? "border-primary bg-primary/[0.04]" : "border-hairline/10"
               }`}
             >
               {loading && (
@@ -111,7 +111,7 @@ export default function Verification() {
           </div>
 
           {result && (
-            <div className="relative z-10 w-full max-w-md card !shadow-none border border-black/[0.06] p-5 animate-slideUp">
+            <div className="relative z-10 w-full max-w-md card !shadow-none border border-hairline/[0.06] p-5 animate-slideUp">
               <div className="flex items-center gap-2 mb-2">
                 {result.status === "VERIFIED" ? (
                   <CheckCircle2 size={20} className="text-success" />
@@ -124,11 +124,11 @@ export default function Verification() {
               <div className="grid grid-cols-2 gap-4 mt-4 text-xs">
                 <div>
                   <p className="text-muted mb-1 font-medium">Expected</p>
-                  <pre className="bg-black/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.expected, null, 2)}</pre>
+                  <pre className="bg-hairline/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.expected, null, 2)}</pre>
                 </div>
                 <div>
                   <p className="text-muted mb-1 font-medium">Detected</p>
-                  <pre className="bg-black/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.detected, null, 2)}</pre>
+                  <pre className="bg-hairline/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.detected, null, 2)}</pre>
                 </div>
               </div>
               <p className="text-xs text-muted mt-3">
@@ -150,7 +150,7 @@ export default function Verification() {
                         ? "bg-success text-white"
                         : i === activeStep
                         ? "bg-gradient-primary text-white"
-                        : "bg-black/[0.06] text-muted"
+                        : "bg-hairline/[0.06] text-muted"
                     }`}
                   >
                     {i < activeStep ? <CheckCircle2 size={14} /> : i + 1}
@@ -163,7 +163,7 @@ export default function Verification() {
 
           <div className="card p-6">
             <h3 className="font-semibold text-ink mb-4">Recent Verifications</h3>
-            <ul className="flex flex-col divide-y divide-black/[0.05]">
+            <ul className="flex flex-col divide-y divide-hairline/[0.05]">
               {recent.map((t) => (
                 <li key={t.id} className="py-2.5 flex items-center justify-between text-sm">
                   <span className="text-muted">#{t.id}</span>

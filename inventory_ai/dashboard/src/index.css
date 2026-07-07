@@ -6,11 +6,29 @@
   box-sizing: border-box;
 }
 
+:root {
+  --color-surface: 247 248 250; /* #F7F8FA */
+  --color-surface-alt: 255 255 255; /* card/chrome white */
+  --color-ink: 26 26 26; /* #1A1A1A */
+  --color-muted: 107 114 128; /* #6B7280 */
+  --color-hairline: 0 0 0; /* black-tinted borders/overlays */
+}
+
+:root.dark {
+  --color-surface: 15 17 21;
+  --color-surface-alt: 24 26 32;
+  --color-ink: 237 238 240;
+  --color-muted: 148 154 166;
+  --color-hairline: 255 255 255;
+}
+
 html,
 body {
   font-family: "Poppins", system-ui, sans-serif;
-  background: #f7f8fa;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-ink));
   scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::-webkit-scrollbar {
@@ -21,20 +39,20 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
+  background: rgb(var(--color-hairline) / 0.15);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: rgb(var(--color-hairline) / 0.25);
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-soft;
+    @apply bg-surface-alt/70 backdrop-blur-xl border border-hairline/10 shadow-soft;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-soft border border-black/[0.03] transition-all duration-300;
+    @apply bg-surface-alt rounded-xl shadow-soft border border-hairline/[0.05] transition-all duration-300;
   }
 
   .card-hover {
@@ -48,7 +66,7 @@ body {
   }
 
   .btn-secondary {
-    @apply bg-white border border-black/10 text-ink font-medium rounded-xl px-5 py-2.5
+    @apply bg-surface-alt border border-hairline/10 text-ink font-medium rounded-xl px-5 py-2.5
       transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-soft;
   }
 
@@ -57,7 +75,7 @@ body {
   }
 
   .input-field {
-    @apply w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm text-ink
+    @apply w-full bg-surface-alt border border-hairline/10 rounded-xl px-4 py-2.5 text-sm text-ink
       placeholder:text-muted transition-all duration-200
       focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
   }

@@ -19,7 +19,7 @@ import { api } from "../api/client.js";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Filler, Tooltip, Legend);
 
-const gridColor = "#F1F2F4";
+const gridColor = "rgba(128,134,146,0.15)";
 const tickColor = "#6B7280";
 const font = { family: "Poppins", size: 11 };
 
