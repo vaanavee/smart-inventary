@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings as SettingsIcon,
   Radar,
+  QrCode,
   ChevronsLeft,
   ChevronsRight,
   LogOut,
@@ -28,6 +29,8 @@ const LINKS = [
   { to: "/history", label: "History", icon: HistoryIcon },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/monitoring", label: "Monitoring", icon: Radar, adminOnly: true },
+  { to: "/qr-generator", label: "QR Generator", icon: QrCode, adminOnly: true },
+  { to: "/qr-scanner", label: "QR Scanner", icon: ScanLine },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
