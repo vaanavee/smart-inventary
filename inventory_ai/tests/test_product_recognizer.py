@@ -22,3 +22,13 @@ def test_count_products_aggregates_by_name():
     recognized = recognize([_det("book"), _det("book"), _det("scissors")])
     counts = count_products(recognized)
     assert counts == {"Book": 2, "Scissors": 1}
+
+
+def test_visually_unrelated_coco_labels_are_not_mapped_to_catalog_products():
+    """cell phone/remote/cup were previously mismapped to Calculator/Water
+    Bottle, causing false WRONG_PRODUCT verifications when an unrelated
+    object (e.g. a worker's phone) appeared in frame. They must surface as
+    Unknown, not silently become a catalog product."""
+    recognized = recognize([_det("cell phone"), _det("remote"), _det("cup")])
+    names = {r.name for r in recognized}
+    assert names == {"Unknown (cell phone)", "Unknown (remote)", "Unknown (cup)"}

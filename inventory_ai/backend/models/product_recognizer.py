@@ -14,21 +14,23 @@ from collections import Counter
 from backend.inference.rtdetr_detector import Detection
 from database.product_catalog import PRODUCT_CATALOG
 
-# Maps COCO label -> catalog product name, for the subset of catalog items
-# that have a reasonable COCO analogue. Anything not listed here is treated
-# as "unrecognized" and surfaced to the operator with a low-confidence tag
-# rather than silently guessed.
+# Maps COCO label -> catalog product name. The default checkpoint
+# (PekingU/rtdetr_r50vd_coco_o365) exposes exactly the 80 standard COCO
+# classes despite its name, so this list is intentionally short: only
+# classes that are actually the same physical object as a catalog product
+# are mapped. Visually unrelated guesses (e.g. "cell phone" -> "Calculator")
+# were deliberately removed — they caused false WRONG_PRODUCT verifications
+# whenever an unrelated COCO object appeared in frame. Anything not listed
+# here is surfaced as "Unknown (<raw label>)" rather than silently guessed,
+# so operators can see exactly what the model saw.
 _COCO_TO_CATALOG = {
     "book": "Book",
     "scissors": "Scissors",
-    "cell phone": "Calculator",
-    "remote": "Calculator",
     "mouse": "Mouse",
     "keyboard": "Keyboard",
     "bottle": "Water Bottle",
     "handbag": "Bag",
     "backpack": "Bag",
-    "cup": "Water Bottle",
 }
 
 

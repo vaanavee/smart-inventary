@@ -71,11 +71,19 @@ Open the dashboard at http://localhost:5174 — it proxies `/api` to the backend
 
 ## Notes
 
-- No Python interpreter was available in this environment during scaffolding
-  (only the Windows Store alias stub). Install a real Python 3.11+ before
-  running the backend — see [docs/installation.md](docs/installation.md).
-- The RT-DETR checkpoint ships as a COCO-pretrained model by default. It
-  recognizes only the subset of catalog products with a COCO analogue
-  (book, scissors, mouse, keyboard, bottle, bag). Fine-tune on your own
-  product photos to recognize the full catalog — see
+- The RT-DETR checkpoint (`PekingU/rtdetr_r50vd_coco_o365`) ships pretrained,
+  but its exported label head exposes only the 80 standard COCO classes —
+  verified by loading the checkpoint and inspecting `model.config.id2label`
+  directly (its name suggests Objects365 coverage too, but that vocabulary
+  is not exposed by this export). Of those 80, only 7 are visually the same
+  physical object as a catalog product: book, scissors, mouse, keyboard,
+  bottle, handbag, backpack (see `_COCO_TO_CATALOG` in
+  `backend/models/product_recognizer.py`). Every other catalog product
+  (Pencil, Stapler, Tape, Marker, etc.) will show as `Unknown (<label>)`
+  until fine-tuned.
+- Earlier mappings of `cell phone`/`remote` → Calculator and `cup` → Water
+  Bottle were removed: they were visually unrelated guesses that caused
+  false `WRONG_PRODUCT` verifications whenever an unrelated object (e.g. a
+  worker's phone) appeared in frame. Accuracy on your real catalog requires
+  fine-tuning on your own product photos — see
   [docs/training.md](docs/training.md).
