@@ -14,9 +14,35 @@
   --line: #e4ddc9;
   --line-on-steel: rgba(255, 255, 255, 0.14);
 
+  --header-bg: #efe9db;
+  --row-alt: #faf7f0;
+  --row-hover: #fbeecb;
+  --secondary-hover: #f1ead8;
+
   --font-display: 'Oswald', 'Arial Narrow', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ink: #ece8e0;
+  --paper: #17181b;
+  --paper-card: #202226;
+  --steel: #23262d;
+  --steel-2: #9aa0aa;
+  --amber: #f2a900;
+  --amber-deep: #ffc23d;
+  --green: #4caf7d;
+  --red: #ff6b52;
+  --line: #34363c;
+  --line-on-steel: rgba(255, 255, 255, 0.1);
+
+  --header-bg: #2a2c31;
+  --row-alt: #1c1e22;
+  --row-hover: #34301f;
+  --secondary-hover: #2a2c31;
 }
 
 * { box-sizing: border-box; }
@@ -77,6 +103,8 @@ h1, h2, h3 {
 }
 
 .topbar a:hover, .topbar button:hover { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+
+.theme-toggle { white-space: nowrap; }
 
 .topbar.employee { border-bottom-color: var(--green); }
 .topbar.employee a:hover, .topbar.employee button:hover { background: var(--green); color: white; border-color: var(--green); }
@@ -140,7 +168,7 @@ h1, h2, h3 {
   border-bottom: 4px solid var(--amber);
 }
 .big-button.secondary .sub { color: var(--steel-2); }
-.big-button.secondary:hover { background: #f1ead8; transform: translateY(-2px); }
+.big-button.secondary:hover { background: var(--secondary-hover); transform: translateY(-2px); }
 
 .big-button .sub {
   display: block;
@@ -205,7 +233,7 @@ table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 
 th {
-  background: #efe9db;
+  background: var(--header-bg);
   color: var(--steel);
   font-family: var(--font-display);
   font-weight: 500;
@@ -216,8 +244,8 @@ th {
 
 td.mono, td.mono-cell { font-family: var(--font-mono); font-size: 13px; }
 
-tbody tr:nth-child(even) td { background: #faf7f0; }
-tbody tr:hover td { background: #fbeecb; }
+tbody tr:nth-child(even) td { background: var(--row-alt); }
+tbody tr:hover td { background: var(--row-hover); }
 
 /* ---------- Status badges (stamp style) ---------- */
 
@@ -497,7 +525,7 @@ tbody tr:hover td { background: #fbeecb; }
 .rack-cam-num { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--steel); }
 
 .stat-row { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
-.stat-box { background: #efe9db; border-radius: 4px; padding: 12px 16px; min-width: 120px; }
+.stat-box { background: var(--header-bg); border-radius: 4px; padding: 12px 16px; min-width: 120px; }
 .stat-box .num { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--steel); }
 .stat-box .label { font-size: 12px; color: var(--steel-2); }
 

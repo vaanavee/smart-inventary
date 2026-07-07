@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS employees (
   name TEXT NOT NULL,
   rfid_tag TEXT UNIQUE NOT NULL,
   department TEXT,
-  shift TEXT
+  shift TEXT,
+  password_hash TEXT
 );
 
 CREATE TABLE IF NOT EXISTS products (
@@ -61,7 +62,26 @@ CREATE TABLE IF NOT EXISTS room_entries (
 );
 `);
 
+// Migration: employees table may pre-date the password_hash column (added for
+// employee self-login). ALTER is a no-op error if it already exists, so guard
+// with a schema check rather than try/catch-and-ignore.
+function ensureEmployeePasswordColumn() {
+  const columns = db.prepare("PRAGMA table_info(employees)").all();
+  const hasPasswordHash = columns.some((c) => c.name === 'password_hash');
+  if (!hasPasswordHash) {
+    db.exec('ALTER TABLE employees ADD COLUMN password_hash TEXT');
+  }
+}
+
+// Demo-only default password for every seeded employee (EMP001-EMP005), so
+// Phase 1's employee login has something to authenticate against. This is
+// NOT a production credential scheme - real deployments should require each
+// employee to set their own password.
+const DEFAULT_EMPLOYEE_PASSWORD = process.env.DEFAULT_EMPLOYEE_PASSWORD || 'employee123';
+
 function seedIfEmpty() {
+  ensureEmployeePasswordColumn();
+
   const adminCount = db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
   if (adminCount === 0) {
     const username = process.env.ADMIN_USERNAME || 'admin';
@@ -73,8 +93,9 @@ function seedIfEmpty() {
   const empCount = db.prepare('SELECT COUNT(*) AS c FROM employees').get().c;
   if (empCount === 0) {
     const insert = db.prepare(
-      'INSERT INTO employees (emp_id, name, rfid_tag, department, shift) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO employees (emp_id, name, rfid_tag, department, shift, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
     );
+    const defaultHash = bcrypt.hashSync(DEFAULT_EMPLOYEE_PASSWORD, 10);
     const employees = [
       ['EMP001', 'Akash', 'RFID1001', 'Inventory', '09:00-03:00'],
       ['EMP002', 'Rahul', 'RFID1002', 'Warehouse', '09:00-03:00'],
@@ -83,8 +104,18 @@ function seedIfEmpty() {
       ['EMP005', 'Karthik', 'RFID1005', 'Logistics', '09:00-03:00'],
     ];
     db.exec('BEGIN');
-    employees.forEach((r) => insert.run(...r));
+    employees.forEach((r) => insert.run(...r, defaultHash));
     db.exec('COMMIT');
+  } else {
+    // Backfill password_hash for employees seeded before this column existed.
+    const missingPassword = db.prepare('SELECT emp_id FROM employees WHERE password_hash IS NULL').all();
+    if (missingPassword.length > 0) {
+      const defaultHash = bcrypt.hashSync(DEFAULT_EMPLOYEE_PASSWORD, 10);
+      const update = db.prepare('UPDATE employees SET password_hash = ? WHERE emp_id = ?');
+      db.exec('BEGIN');
+      missingPassword.forEach((row) => update.run(defaultHash, row.emp_id));
+      db.exec('COMMIT');
+    }
   }
 
   const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;

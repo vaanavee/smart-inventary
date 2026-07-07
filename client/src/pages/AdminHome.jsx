@@ -6,6 +6,8 @@ export default function AdminHome() {
   const [employees, setEmployees] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [inBuilding, setInBuilding] = useState([]);
+  const [liveEvents, setLiveEvents] = useState([]);
+  const [live, setLive] = useState(false);
   const [error, setError] = useState('');
 
   function loadCurrent() {
@@ -16,12 +18,52 @@ export default function AdminHome() {
     api.getEmployees().then(setEmployees).catch((e) => setError(e.message));
     api.getExpiryAlerts().then((data) => setAlerts(data.alerts)).catch(() => {});
     loadCurrent();
-    const id = setInterval(loadCurrent, 10000);
-    return () => clearInterval(id);
+
+    // Real-time push via SSE; a slow poll stays as a safety net in case the
+    // stream drops (e.g. proxy/network hiccup) so the table never goes stale.
+    const pollId = setInterval(loadCurrent, 30000);
+
+    const source = new EventSource(api.roomEntryStreamUrl());
+    source.onopen = () => setLive(true);
+    source.onerror = () => setLive(false);
+    source.onmessage = (evt) => {
+      const payload = JSON.parse(evt.data);
+      if (payload.action === 'entry' || payload.action === 'exit') {
+        setLiveEvents((prev) => [{ ...payload, id: `${payload.employee.emp_id}-${Date.now()}` }, ...prev].slice(0, 20));
+        loadCurrent();
+      }
+    };
+
+    return () => {
+      clearInterval(pollId);
+      source.close();
+    };
   }, []);
 
   return (
     <>
+      <div className="card">
+        <h2>
+          Live RFID Feed{' '}
+          <span style={{ fontSize: '0.7em', color: live ? '#16a34a' : '#dc2626' }}>
+            {live ? '● Live' : '○ Reconnecting…'}
+          </span>
+        </h2>
+        {liveEvents.length === 0 ? (
+          <p className="muted">Waiting for the next RFID scan…</p>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {liveEvents.map((e) => (
+              <li key={e.id}>
+                {e.action === 'entry'
+                  ? `${e.employee.name} (${e.employee.emp_id}) entered ${e.room} at ${e.entry_time}`
+                  : `${e.employee.name} (${e.employee.emp_id}) exited ${e.room} at ${e.exit_time} (${e.duration})`}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {alerts.length > 0 && (
         <div className="alert-banner">
           <strong>⚠ Expiry Notification — {alerts.length} product(s) approaching expiry</strong>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 
 const ROOMS = ['Room 1', 'Room 2', 'Room 3'];
 const RACKS = ['A', 'B', 'C', 'D', 'E'];
@@ -28,6 +29,7 @@ export default function EmployeeStock() {
         <h1>Smart Inventory — Employee</h1>
         <nav>
           <Link to="/employee/scan">Scan Product</Link>
+          <ThemeToggle />
           <Link to="/">Exit</Link>
         </nav>
       </div>

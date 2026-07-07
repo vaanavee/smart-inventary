@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAdmin, requireAdminViaQuery } = require('../middleware/auth');
+const { roomEntryEvents } = require('../events');
 
 const router = express.Router();
 
@@ -48,6 +49,31 @@ router.get('/current', requireAdmin, (req, res) => {
   res.json(rows);
 });
 
+// Admin: live push of every RFID entry/exit as it happens (Server-Sent Events).
+// EventSource can't set headers, so auth comes via ?token= instead of the
+// Authorization header used by the other routes.
+router.get('/stream', requireAdminViaQuery, (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  const send = (payload) => res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  send({ type: 'connected' });
+
+  const onEntry = (payload) => send(payload);
+  roomEntryEvents.on('entry', onEntry);
+
+  const heartbeat = setInterval(() => res.write(': ping\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    roomEntryEvents.off('entry', onEntry);
+  });
+});
+
 // Admin/kiosk: scan an RFID tag at a room door. First scan of the day checks the
 // employee in; if they already have an open entry, this scan checks them out.
 router.post('/scan', requireAdmin, (req, res) => {
@@ -73,14 +99,16 @@ router.post('/scan', requireAdmin, (req, res) => {
       'Completed',
       open.id
     );
-    return res.json({
+    const exitPayload = {
       action: 'exit',
       employee: { name: employee.name, emp_id: employee.emp_id, department: employee.department },
       room: open.room,
       entry_time: open.entry_time,
       exit_time: time,
       duration,
-    });
+    };
+    roomEntryEvents.emit('entry', exitPayload);
+    return res.json(exitPayload);
   }
 
   db.prepare(
@@ -88,12 +116,14 @@ router.post('/scan', requireAdmin, (req, res) => {
      VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 'In Room')`
   ).run(today, employee.emp_id, employee.name, employee.rfid_tag, room, time);
 
-  res.json({
+  const entryPayload = {
     action: 'entry',
     employee: { name: employee.name, emp_id: employee.emp_id, department: employee.department },
     room,
     entry_time: time,
-  });
+  };
+  roomEntryEvents.emit('entry', entryPayload);
+  res.json(entryPayload);
 });
 
 module.exports = router;

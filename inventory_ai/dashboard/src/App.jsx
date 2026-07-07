@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
 import Topbar from "./components/Topbar.jsx";
 import Home from "./pages/Home.jsx";
@@ -10,8 +10,11 @@ import Workers from "./pages/Workers.jsx";
 import History from "./pages/History.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Settings from "./pages/Settings.jsx";
+import Monitoring from "./pages/Monitoring.jsx";
+import Login from "./pages/Login.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 
-export default function App() {
+function AppLayout() {
   return (
     <div className="flex min-h-screen bg-surface bg-gradient-radial-soft">
       <Sidebar />
@@ -28,9 +31,22 @@ export default function App() {
             <Route path="/history" element={<History />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/*" element={user ? <AppLayout /> : <Navigate to="/login" replace />} />
+    </Routes>
   );
 }

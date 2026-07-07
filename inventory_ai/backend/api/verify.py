@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 
 from backend.camera.webcam_stream import camera_stream
 from backend.inference.rtdetr_detector import detector
-from backend.models.product_recognizer import count_products, recognize
 from backend.schemas import VerifyRequest, VerifyResponse
 from backend.utils.logger import get_logger
+from backend.verification.frame_aggregator import capture_and_aggregate
 from backend.verification.verifier import verify
 from database.models import Product, Transaction, VerificationLog, Worker
 from database.session import get_db
@@ -29,19 +29,16 @@ def verify_box(payload: VerifyRequest, db: Session = Depends(get_db)) -> VerifyR
     if worker is None:
         raise HTTPException(status_code=404, detail=f"Worker {payload.worker_id} not found")
 
-    frame = camera_stream.get_frame()
-    if frame is None:
+    if camera_stream.get_frame() is None:
         raise HTTPException(status_code=503, detail="Camera not available. Start the camera first.")
 
-    raw_detections = detector.detect(frame)
-    recognized = recognize(raw_detections)
-    detected_counts = count_products(recognized)
+    # Captures a short burst of frames and takes the median count per product
+    # rather than trusting a single frame, so one occluded/blurred frame can't
+    # flip a correct box to a false mismatch. See frame_aggregator.py.
+    detected_counts, avg_confidence = capture_and_aggregate(camera_stream, detector)
     expected_counts = {product.name: product.current_stock}
 
     result = verify(expected_counts, detected_counts)
-    avg_confidence = (
-        sum(r.confidence for r in recognized) / len(recognized) if recognized else 0.0
-    )
 
     transaction = Transaction(
         worker_id=worker.id,

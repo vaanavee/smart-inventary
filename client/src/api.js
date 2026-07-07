@@ -57,4 +57,6 @@ export const api = {
   getRoomEntries: (date) => request(`/room-entries?date=${date}`, { auth: true }),
   getCurrentRoomEntries: () => request('/room-entries/current', { auth: true }),
   getCctvOverview: () => request('/cctv/overview', { auth: true }),
+  // EventSource can't set an Authorization header, so the token travels as a query param.
+  roomEntryStreamUrl: () => `${API_BASE}/api/room-entries/stream?token=${encodeURIComponent(getToken() || '')}`,
 };

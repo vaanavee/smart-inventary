@@ -7,6 +7,11 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/api": "http://localhost:8000",
+      "/monitor-api": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/monitor-api/, "/api"),
+      },
     },
   },
 });

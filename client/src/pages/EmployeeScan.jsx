@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../api.js';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 
 export default function EmployeeScan() {
   const [scanResult, setScanResult] = useState(null);
@@ -74,6 +75,7 @@ export default function EmployeeScan() {
         <h1>Scan Product</h1>
         <nav>
           <Link to="/employee">Back to Stock</Link>
+          <ThemeToggle />
           <Link to="/">Exit</Link>
         </nav>
       </div>
