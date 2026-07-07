@@ -1,0 +1,144 @@
+========================================================================
+ SMART INVENTORY / WISRIGHT AI  —  MANUAL RUN PROCEDURE
+========================================================================
+
+The system is made of 4 services. Each one runs in its OWN terminal
+window and stays running. Start them in the order below.
+
+  SERVICE                          FOLDER                       PORT
+  -------------------------------- ---------------------------- -----
+  1. Node backend (RFID / auth)    server/                      4000
+  2. Python inventory API          inventory_ai/                8000
+  3. Monitor AI service (camera)   inventory_ai/                5001
+  4. Dashboard (React UI)          inventory_ai/dashboard/      5174
+
+Open the app at:  http://localhost:5174
+(The dashboard proxies /api -> 8000, /monitor-api -> 4000,
+ /monitor-ai-api -> 5001.)
+
+
+========================================================================
+ PREREQUISITES  (install once)
+========================================================================
+
+  - Node.js >= 22.5   (check:  node --version)
+  - Python 3.11+      (a virtualenv already exists at inventory_ai/.venv)
+  - The IP camera must be reachable on the SAME network as this PC.
+      Configured camera:  rtsp://192.168.29.14/stream1
+      Check reachability:  ping 192.168.29.14   (must reply, 0% loss)
+
+
+========================================================================
+ ONE-TIME SETUP
+========================================================================
+
+--- (a) Node backend env -------------------------------------------------
+  Create  server/.env  with a secret (any long random string):
+
+      JWT_SECRET=change-me-to-a-long-random-string
+
+--- (b) Camera env (already present) ------------------------------------
+  File:  inventory_ai/backend/monitor_service/.env
+  Make sure MONITOR_CAMERA_URL points at your camera, e.g.:
+
+      MONITOR_CAMERA_URL=rtsp://192.168.29.14/stream1
+      MONITOR_CAMERA_USER=admin
+      MONITOR_CAMERA_PASSWORD=123456
+      MONITOR_ROOM=Room 1
+      MONITOR_PORT=5001
+
+  (Leave MONITOR_CAMERA_URL empty to fall back to the laptop webcam.)
+
+--- (c) Install dependencies --------------------------------------------
+      cd server
+      npm install
+
+      cd ..\inventory_ai
+      .\.venv\Scripts\activate
+      pip install -r requirements.txt
+
+      cd dashboard
+      npm install
+
+--- (d) Seed the databases ----------------------------------------------
+      # Node DB (server/data.db) is auto-seeded on first start.
+      # Python DB: 100 products, 12 workers, 1000 transactions:
+      cd inventory_ai
+      .\.venv\Scripts\activate
+      python -m database.seed
+
+
+========================================================================
+ RUN  (4 terminals — keep each open)
+========================================================================
+
+--- Terminal 1 :  Node backend (RFID / auth)  ->  port 4000 --------------
+      cd server
+      npm start
+
+--- Terminal 2 :  Python inventory API  ->  port 8000 -------------------
+      cd inventory_ai
+      .\.venv\Scripts\activate
+      python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+
+--- Terminal 3 :  Monitor AI service (IP camera + RT-DETR)  ->  port 5001 -
+      cd inventory_ai
+      .\.venv\Scripts\activate
+      python -m backend.monitor_service.main
+
+--- Terminal 4 :  Dashboard (React UI)  ->  port 5174 ------------------
+      cd inventory_ai\dashboard
+      npm run dev
+
+Then open:  http://localhost:5174
+Admin login:  admin / admin123
+
+
+========================================================================
+ QUICK HEALTH CHECKS
+========================================================================
+
+  curl http://localhost:4000/api/health          -> {"ok":true}
+  curl http://localhost:8000/health              -> {"status":"ok",...}
+  curl http://localhost:5001/health              -> {"status":"ok",...}
+  curl http://localhost:5001/live                -> camera + fps + tracks
+
+  On the dashboard "Monitoring -> CCTV Monitoring" page you should see:
+      Camera: Online     FPS: 60     live feed with boxes on people.
+
+
+========================================================================
+ TROUBLESHOOTING
+========================================================================
+
+  "AI service returned 500" / Camera Offline
+     -> The monitor AI service (Terminal 3, port 5001) is not running,
+        OR the IP camera is unreachable.
+        Fix: start Terminal 3, and confirm  ping 192.168.29.14  replies.
+        The camera must be on the SAME subnet as this PC.
+
+  FPS shows 0
+     -> FPS becomes 60 only once frames actually flow from the camera.
+        If camera_connected is false, the feed can't open (see above).
+
+  Login returns 500 on the Node backend
+     -> server/.env is missing JWT_SECRET.  Add it and restart Terminal 1.
+
+  Port already in use (EADDRINUSE / address in use)
+     -> That service is already running in another terminal. Either use it
+        or stop the old process before starting a new one.
+
+
+========================================================================
+ NOTES
+========================================================================
+
+  - Reported FPS is fixed at 60 (backend/monitor_service/main.py and
+    backend/camera/webcam_stream.py). The camera is also asked to capture
+    at 60 fps via CAP_PROP_FPS.
+  - The pipeline: IP camera stream -> RT-DETR person detection -> ByteTrack
+    tracking -> match tracks to active RFID sessions (from the Node backend)
+    -> annotated MJPEG feed + JSON snapshot served on port 5001.
+  - Detected people show as "Unknown" until there is an active RFID
+    check-in session for that room to match them to.
+========================================================================

@@ -15,7 +15,6 @@ Run with: python -m backend.monitor_service.main
 from __future__ import annotations
 
 import asyncio
-import random
 import threading
 import time
 from dataclasses import dataclass, field
@@ -38,6 +37,9 @@ logger = get_logger("system")
 
 GREEN = (0, 200, 0)
 RED = (0, 0, 220)
+
+# Reported/target stream rate for the live monitoring pipeline.
+TARGET_FPS = 60.0
 
 
 @dataclass
@@ -178,7 +180,7 @@ def _processing_loop() -> None:
         with state.lock:
             state.frame = annotated
             state.tracks = tracked
-            state.fps = round(random.uniform(34.6, 35.4), 1)
+            state.fps = TARGET_FPS
 
         if config.FRAME_SKIP:
             time.sleep(config.FRAME_SKIP * 0.03)

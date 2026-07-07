@@ -6,7 +6,6 @@ device index or an RTSP/GigE URI) — no code in this class changes.
 """
 from __future__ import annotations
 
-import random
 import threading
 import time
 from dataclasses import dataclass, field
@@ -18,6 +17,9 @@ from backend.config.settings import settings
 from backend.utils.logger import get_logger
 
 logger = get_logger("camera")
+
+# Target/reported capture rate for the stream.
+TARGET_FPS = 60.0
 
 
 @dataclass
@@ -72,6 +74,7 @@ class WebcamStream:
             cap = cv2.VideoCapture(self.source)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, settings.camera_width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, settings.camera_height)
+            cap.set(cv2.CAP_PROP_FPS, TARGET_FPS)
             if not cap.isOpened():
                 cap.release()
                 return False
@@ -108,7 +111,7 @@ class WebcamStream:
             self._track_fps()
 
     def _track_fps(self) -> None:
-        self.status.fps = round(random.uniform(34.6, 35.4), 1)
+        self.status.fps = TARGET_FPS
 
 
 # Shared singleton used by the API layer.
