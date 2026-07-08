@@ -58,7 +58,7 @@ class LiveState:
             return {
                 "camera_connected": self.connected,
                 "power_on": self.power,
-                "fps": self.fps,
+                "fps": TARGET_FPS if self.power else 0.0,
                 "room": config.MONITOR_ROOM,
                 "employee_count": sum(1 for t in self.tracks if t["emp_id"] is not None),
                 "unknown_count": sum(1 for t in self.tracks if t["emp_id"] is None),
@@ -121,12 +121,17 @@ def _draw_overlay(frame: np.ndarray, tracked: list[dict]) -> np.ndarray:
     return annotated
 
 
-def _processing_loop() -> None:
+def _inference_loop() -> None:
     last_session_poll = 0.0
     active_sessions: list[dict] = []
-    fps_window: list[float] = []
 
     while True:
+        with state.lock:
+            power = state.power
+        if not power:
+            time.sleep(0.1)
+            continue
+
         frame = camera.get_frame()
         state.connected = camera.status.connected
         if frame is None:
@@ -207,18 +212,8 @@ def _processing_loop() -> None:
                 _last_posted_assignment[tracker_id] = current_emp
                 node.post_detection(tracker_id, current_emp, confidence, config.MONITOR_ROOM)
 
-        annotated = _draw_overlay(frame, tracked)
-
-        fps_window.append(now)
-        fps_window[:] = [t for t in fps_window if t >= now - 1.0]
-
         with state.lock:
-            state.frame = annotated
             state.tracks = tracked
-            state.fps = TARGET_FPS
-
-        if config.FRAME_SKIP:
-            time.sleep(config.FRAME_SKIP * 0.03)
 
 
 app = FastAPI(title="WisRight Employee Monitoring AI Service")
@@ -227,7 +222,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 @app.on_event("startup")
 def _startup() -> None:
-    thread = threading.Thread(target=_processing_loop, daemon=True)
+    thread = threading.Thread(target=_inference_loop, daemon=True)
     thread.start()
 
 
@@ -247,6 +242,7 @@ def camera_on() -> dict:
     camera.start()  # idempotent: warns and no-ops if already running
     with state.lock:
         state.power = True
+        state.fps = TARGET_FPS
     logger.info("Camera switched ON via toggle")
     return {"power_on": True}
 
@@ -268,15 +264,19 @@ def _mjpeg_generator():
     add_viewer()
     try:
         while True:
-            with state.lock:
-                frame = None if state.frame is None else state.frame.copy()
+            frame = camera.get_frame()
+            state.connected = camera.status.connected
             if frame is None:
-                time.sleep(0.1)
+                time.sleep(0.03)
                 continue
-            ok, buffer = cv2.imencode(".jpg", frame)
+            with state.lock:
+                tracked = list(state.tracks)
+            annotated = _draw_overlay(frame, tracked)
+            ok, buffer = cv2.imencode(".jpg", annotated)
             if not ok:
                 continue
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+            time.sleep(0.03)
     finally:
         remove_viewer()
 

@@ -51,6 +51,7 @@ class WebcamStream:
             logger.warning("Camera already running")
             return
         self._running = True
+        self.status.fps = TARGET_FPS
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         logger.info("Camera stream started (source=%s)", self.source)
@@ -63,6 +64,7 @@ class WebcamStream:
             self._cap.release()
             self._cap = None
         self.status.connected = False
+        self.status.fps = 0.0
         # Clear the last frame so consumers see None (not a frozen final frame)
         # once the camera is powered off.
         with self._lock:
