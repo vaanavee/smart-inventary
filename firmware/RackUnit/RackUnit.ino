@@ -8,30 +8,6 @@
 
   The backend rejects the tap (403) if that employee doesn't currently have
   an open entrance session - they must tap the EntranceUnit's reader first.
-  This unit and the EntranceUnit are two independent ESP32 boards that both
-  join the same real WiFi network and both talk to the same backend -
-  neither one talks to the other directly anymore.
-
-  BEFORE FLASHING - fill in the placeholders below:
-    WIFI_SSID / WIFI_PASSWORD : same real WiFi network as the EntranceUnit
-    SERVER_HOST                : LAN IP of the machine running the Node
-                                  backend (NOT 127.0.0.1 - find it with
-                                  `ipconfig` on that machine)
-    ROOM_NAME / RACK_NAME      : must match a room/rack already known to
-                                  the backend (e.g. "Room 1" / "A")
-
-  Wiring (MFRC522 -> ESP32) - same as Entrance Unit, adjust pins if needed:
-    SDA/SS  -> GPIO5
-    SCK     -> GPIO18
-    MOSI    -> GPIO23
-    MISO    -> GPIO19
-    RST     -> GPIO22
-    3.3V    -> 3.3V
-    GND     -> GND
-
-  Libraries required (Arduino Library Manager):
-    - MFRC522 (by GithubCommunity)
-    - ESP32 board package (provides WiFi.h, HTTPClient.h)
 */
 
 #include <SPI.h>
@@ -49,16 +25,17 @@ const int   SERVER_PORT = 4000;
 const char* ROOM_NAME   = "Room 1";
 const char* RACK_NAME   = "A";
 
-// ---------------- RFID ----------------
-#define SS_PIN  5
-#define RST_PIN 22
-MFRC522 rfid(SS_PIN, RST_PIN);
+// ---------------- RFID (Dynamic Pins) ----------------
+MFRC522* rfid = nullptr;
+int detectedSS = -1;
+int detectedRST = -1;
 
 String readUID() {
   String uidStr = "";
-  for (byte i = 0; i < rfid.uid.size; i++) {
-    if (rfid.uid.uidByte[i] < 0x10) uidStr += "0";
-    uidStr += String(rfid.uid.uidByte[i], HEX);
+  if (!rfid) return uidStr;
+  for (byte i = 0; i < rfid->uid.size; i++) {
+    if (rfid->uid.uidByte[i] < 0x10) uidStr += "0";
+    uidStr += String(rfid->uid.uidByte[i], HEX);
   }
   uidStr.toUpperCase();
   return uidStr;
@@ -68,10 +45,48 @@ String backendUrl(const char* path) {
   return "http://" + String(SERVER_HOST) + ":" + String(SERVER_PORT) + path;
 }
 
+bool tryRFID(int ssPin, int rstPin, int sckPin, int misoPin, int mosiPin) {
+  Serial.printf("Trying RFID config: SS=%d, RST=%d, SCK=%d, MISO=%d, MOSI=%d\n", ssPin, rstPin, sckPin, misoPin, mosiPin);
+  if (rfid != nullptr) {
+    delete rfid;
+    rfid = nullptr;
+  }
+  SPI.end();
+  SPI.begin(sckPin, misoPin, mosiPin, ssPin);
+  rfid = new MFRC522(ssPin, rstPin);
+  rfid->PCD_Init();
+  
+  byte version = rfid->PCD_ReadRegister((MFRC522::PCD_Register)0x37); // VersionReg
+  Serial.printf("MFRC522 Version Register: 0x%02X\n", version);
+  
+  if (version == 0x91 || version == 0x92 || version == 0x88 || version == 0x90) {
+    Serial.println("RFID Reader detected successfully!");
+    detectedSS = ssPin;
+    detectedRST = rstPin;
+    return true;
+  }
+  return false;
+}
+
 void setup() {
   Serial.begin(115200);
-  SPI.begin();
-  rfid.PCD_Init();
+  delay(500);
+  Serial.println("\n==== Rack Unit Booting ====");
+
+  bool rfidDetected = false;
+  // Try config 1: standard wiring
+  if (tryRFID(5, 22, 18, 19, 23)) {
+    rfidDetected = true;
+  }
+  // Try config 2: standalone wiring
+  else if (tryRFID(15, 21, 18, 19, 23)) {
+    rfidDetected = true;
+  }
+
+  if (!rfidDetected) {
+    Serial.println("WARNING: RFID reader not detected! Checking physical wiring. Defaulting to pins 5/22.");
+    tryRFID(5, 22, 18, 19, 23);
+  }
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to WiFi");
@@ -89,7 +104,7 @@ void setup() {
 }
 
 void loop() {
-  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
+  if (!rfid || !rfid->PICC_IsNewCardPresent() || !rfid->PICC_ReadCardSerial()) {
     return;
   }
 
@@ -120,7 +135,7 @@ void loop() {
     }
   }
 
-  rfid.PICC_HaltA();
-  rfid.PCD_StopCrypto1();
+  rfid->PICC_HaltA();
+  rfid->PCD_StopCrypto1();
   delay(1000); // simple debounce so one tap isn't read twice
 }

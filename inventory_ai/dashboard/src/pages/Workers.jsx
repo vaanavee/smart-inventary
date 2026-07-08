@@ -28,9 +28,28 @@ export default function Workers() {
   const [query, setQuery] = useState("");
   const [department, setDepartment] = useState("");
   const [tab, setTab] = useState("directory");
+  const [deviceIp, setDeviceIp] = useState(null);
+  const [deviceStatus, setDeviceStatus] = useState("offline");
 
   useEffect(() => {
     api.get("/workers").then(setWorkers).catch(() => {});
+
+    const fetchStatus = () => {
+      fetch("/monitor-api/rfid/device-status")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.devices && data.devices["Entrance Unit"]) {
+            const dev = data.devices["Entrance Unit"];
+            setDeviceIp(dev.ip);
+            setDeviceStatus(dev.status.toLowerCase());
+          }
+        })
+        .catch((err) => console.error("Error fetching device status:", err));
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const departments = useMemo(() => ["", ...new Set(workers.map((w) => w.department))], [workers]);
@@ -142,11 +161,42 @@ export default function Workers() {
         </>
       ) : (
         <div className="card p-0 overflow-hidden h-[600px] border border-hairline/[0.06] rounded-2xl bg-black/5">
-          <iframe
-            src="http://192.168.29.211/"
-            title="Device Administration Console"
-            className="w-full h-full border-0"
-          />
+          {deviceIp && deviceStatus === "online" ? (
+            <iframe
+              src={`http://${deviceIp}/`}
+              title="Device Administration Console"
+              className="w-full h-full border-0"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-6 bg-surface">
+              <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 animate-pulse">
+                <Cpu size={32} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-ink">Entrance Unit Offline</h3>
+                <p className="text-muted text-sm max-w-md mt-1">
+                  The dashboard is waiting for the physical Entrance Unit ESP32 to connect to the network and check in.
+                </p>
+              </div>
+              {deviceIp ? (
+                <div className="text-xs text-muted mt-2">
+                  Last known IP: <span className="font-mono bg-hairline/[0.1] px-1.5 py-0.5 rounded">{deviceIp}</span>
+                  <a
+                    href={`http://${deviceIp}/`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 text-primary hover:underline font-medium"
+                  >
+                    Force Open Console
+                  </a>
+                </div>
+              ) : (
+                <div className="text-xs text-muted mt-2">
+                  Searching network for device...
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

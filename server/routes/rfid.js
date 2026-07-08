@@ -138,4 +138,39 @@ router.post('/rack-scan', (req, res) => {
   });
 });
 
+const devices = {};
+
+// Register or update device connection status & IP
+router.post('/heartbeat', (req, res) => {
+  const { deviceName, room, ip } = req.body || {};
+  if (!deviceName) {
+    return res.status(400).json({ error: 'deviceName is required' });
+  }
+
+  let clientIp = ip || req.ip || req.socket.remoteAddress;
+  if (clientIp.startsWith('::ffff:')) {
+    clientIp = clientIp.substring(7);
+  }
+
+  devices[deviceName] = {
+    ip: clientIp,
+    room: room || 'Unknown',
+    lastSeen: Date.now(),
+    status: 'Online'
+  };
+
+  res.json({ ok: true, registeredIp: clientIp });
+});
+
+// Retrieve status and IP address of all devices
+router.get('/device-status', (req, res) => {
+  const now = Date.now();
+  for (const name in devices) {
+    if (now - devices[name].lastSeen > 120000) {
+      devices[name].status = 'Offline';
+    }
+  }
+  res.json({ devices });
+});
+
 module.exports = router;
