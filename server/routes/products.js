@@ -20,15 +20,28 @@ router.get('/overview', (req, res) => {
   res.json(overview);
 });
 
-// Public: products in a given room + rack.
+// Public: full catalog, optionally filtered by room and/or rack. With no query
+// params, returns every product (used by the Products page's catalog grid).
 router.get('/', (req, res) => {
   const { room, rack } = req.query;
-  if (!room || !rack) {
-    return res.status(400).json({ error: 'room and rack query params are required' });
+
+  if (room && rack) {
+    const products = db
+      .prepare('SELECT product_id, name, room, rack, unit, qty, expiry_date FROM products WHERE room = ? AND rack = ? ORDER BY product_id')
+      .all(room, rack);
+    return res.json(products);
   }
+
+  if (room) {
+    const products = db
+      .prepare('SELECT product_id, name, room, rack, unit, qty, expiry_date FROM products WHERE room = ? ORDER BY rack, product_id')
+      .all(room);
+    return res.json(products);
+  }
+
   const products = db
-    .prepare('SELECT product_id, name, room, rack, unit, qty, expiry_date FROM products WHERE room = ? AND rack = ? ORDER BY product_id')
-    .all(room, rack);
+    .prepare('SELECT product_id, name, room, rack, unit, qty, expiry_date FROM products ORDER BY room, rack, product_id')
+    .all();
   res.json(products);
 });
 
