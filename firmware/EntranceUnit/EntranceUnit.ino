@@ -46,8 +46,8 @@
 #include <HTTPClient.h>
 
 // ---------------- WiFi ----------------
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "Wisright";
+const char* WIFI_PASSWORD = "26488668";
 
 // ---------------- Backend ----------------
 // LAN IP of the machine running `node index.js` (server/), e.g. "192.168.1.42".

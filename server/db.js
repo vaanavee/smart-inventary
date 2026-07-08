@@ -171,6 +171,24 @@ function seedIfEmpty() {
     }
   }
 
+  // Real physical RFID cards (from the RFID_Attendance_Standalone sketch) mapped
+  // to actual employees, so EntranceUnit.ino's checkin/checkout taps resolve to a
+  // known employee instead of 404ing. Upserted by rfid_tag every startup (not
+  // gated on empCount===0) so it still runs after the initial EMP001-005 seed.
+  const realCardHolders = [
+    ['EMP101', 'Vishali', '4E500E06', 'Inventory', '09:00-03:00'],
+    ['EMP102', 'Suraj', 'CC392B1F', 'Warehouse', '09:00-03:00'],
+    ['EMP103', 'Vishal', 'B3122A22', 'Stock Control', '09:00-03:00'],
+    ['EMP104', 'Vaanavee', '0EB46F06', 'Packing', '09:00-03:00'],
+  ];
+  const insertRealEmployee = db.prepare(
+    'INSERT OR IGNORE INTO employees (emp_id, name, rfid_tag, department, shift, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  const realEmployeeHash = bcrypt.hashSync(DEFAULT_EMPLOYEE_PASSWORD, 10);
+  db.exec('BEGIN');
+  realCardHolders.forEach((r) => insertRealEmployee.run(...r, realEmployeeHash));
+  db.exec('COMMIT');
+
   const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;
   if (productCount === 0) {
     const insert = db.prepare(
