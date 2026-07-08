@@ -360,10 +360,18 @@ function useCatalog() {
 
 function StockTab() {
   const [overview, setOverview] = useState([]);
+  const [rackScans, setRackScans] = useState([]);
   const { catalog, loading } = useCatalog();
 
   useEffect(() => {
     monitorApi.get("/products/overview").then(setOverview).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => monitorApi.get("/rfid/rack-scans?limit=20").then(setRackScans).catch(() => {});
+    refresh();
+    const poll = setInterval(refresh, 2000);
+    return () => clearInterval(poll);
   }, []);
 
   const totalProducts = catalog.length;
@@ -391,6 +399,41 @@ function StockTab() {
           <p className="text-xs text-muted mb-1">Out of Stock</p>
           <p className="text-2xl font-semibold text-danger">{outOfStock.length}</p>
         </div>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-ink">Recent Rack Taps</h3>
+          <Badge tone="info">{rackScans.length} recent</Badge>
+        </div>
+        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
+          {rackScans.map((s) => (
+            <li key={s.id} className="py-3 flex flex-col gap-2 text-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-ink font-medium">{s.employee_name}</p>
+                  <p className="text-xs text-muted">{s.emp_id} • {s.rfid_tag}</p>
+                </div>
+                <div className="text-right">
+                  <Badge tone="success">{s.room} / Rack {s.rack}</Badge>
+                  <p className="text-xs text-muted mt-1">at {s.time}</p>
+                </div>
+              </div>
+              {s.products.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {s.products.map((p) => (
+                    <span key={p.product_id} className="text-xs rounded-full bg-hairline/[0.06] px-3 py-1 text-muted">
+                      {p.name} — {p.qty} {p.unit}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted">No products recorded at this rack.</p>
+              )}
+            </li>
+          ))}
+          {rackScans.length === 0 && <li className="py-3 text-sm text-muted">No rack taps yet.</li>}
+        </ul>
       </div>
 
       <div className="card p-6">

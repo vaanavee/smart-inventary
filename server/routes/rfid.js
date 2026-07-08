@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { roomEntryEvents } = require('../events');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -136,6 +137,24 @@ router.post('/rack-scan', (req, res) => {
     rack,
     time,
   });
+});
+
+// Admin/dashboard: recent rack taps, newest first, each paired with the
+// products actually stocked on that room+rack so a tap shows "what's here"
+// (Stock Monitoring tab polls this to reflect a tap almost immediately).
+router.get('/rack-scans', requireAdmin, (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const scans = db
+    .prepare('SELECT * FROM rack_scans ORDER BY id DESC LIMIT ?')
+    .all(limit);
+
+  const productsByLocation = db.prepare('SELECT * FROM products WHERE room = ? AND rack = ?');
+  const withProducts = scans.map((scan) => ({
+    ...scan,
+    products: productsByLocation.all(scan.room, scan.rack),
+  }));
+
+  res.json(withProducts);
 });
 
 const devices = {};
