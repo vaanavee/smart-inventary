@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     camera_width: int = 1280
     camera_height: int = 720
     camera_reconnect_delay_seconds: float = 2.0
+    # Consecutive failed opens before the capture thread gives up. Without a
+    # bound, a source that can never open (e.g. webcam index 0 in a container)
+    # retries forever and floods the logs.
+    camera_max_open_attempts: int = 5
 
     # --- RT-DETR model ---
     rtdetr_checkpoint: str = "PekingU/rtdetr_r50vd_coco_o365"

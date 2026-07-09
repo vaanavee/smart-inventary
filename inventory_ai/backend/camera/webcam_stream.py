@@ -91,6 +91,9 @@ class WebcamStream:
             cap.set(cv2.CAP_PROP_FPS, TARGET_FPS)
             if not cap.isOpened():
                 cap.release()
+                # cap.isOpened() failing raises nothing, so record the reason
+                # here or the UI shows "disconnected" with no explanation.
+                self.status.last_error = f"Camera source {self.source!r} could not be opened"
                 return False
             self._cap = cap
             self.status.connected = True
@@ -103,12 +106,25 @@ class WebcamStream:
             return False
 
     def _run_loop(self) -> None:
+        failed_opens = 0
         while self._running:
             if self._cap is None or not self._cap.isOpened():
                 self.status.connected = False
                 if not self._open_capture():
+                    failed_opens += 1
+                    if failed_opens >= settings.camera_max_open_attempts:
+                        logger.error(
+                            "Giving up on camera %s after %d attempts: %s",
+                            self.source,
+                            failed_opens,
+                            self.status.last_error,
+                        )
+                        self._running = False
+                        self.status.fps = 0.0
+                        break
                     time.sleep(settings.camera_reconnect_delay_seconds)
                     continue
+                failed_opens = 0
 
             ok, frame = self._cap.read()
             if not ok:
