@@ -1,10 +1,15 @@
 """Live camera + detection endpoints."""
 from __future__ import annotations
 
+import base64
 import time
 import threading
+
+import cv2
+import numpy as np
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from backend.camera.webcam_stream import camera_stream
 from backend.inference.rtdetr_detector import detector
@@ -81,6 +86,42 @@ def live_detections() -> LiveDetectionOut:
         camera=CameraStatusOut(**camera_stream.status.__dict__),
         detections=detections,
         counts=counts,
+    )
+
+
+class FrameIn(BaseModel):
+    image: str  # base64 JPEG, with or without a data: URL prefix
+
+
+@router.post("/detect-frame")
+def detect_frame(payload: FrameIn) -> LiveDetectionOut:
+    """Run RT-DETR on a single frame captured in the browser.
+
+    A cloud-hosted server has no local webcam, so the dashboard captures from
+    the viewer's own camera and posts JPEG frames here for detection.
+    """
+    b64 = payload.image.split(",", 1)[-1]
+    frame = None
+    try:
+        arr = np.frombuffer(base64.b64decode(b64), dtype=np.uint8)
+        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    except Exception as e:  # noqa: BLE001 - malformed client payloads vary
+        logger.error("Could not decode posted frame: %s", e)
+
+    if frame is None:
+        return LiveDetectionOut(
+            camera=CameraStatusOut(
+                connected=False, fps=0.0, frame_count=0, last_error="Invalid frame", source="browser"
+            ),
+            detections=[],
+            counts={},
+        )
+
+    recognized = recognize(detector.detect(frame))
+    return LiveDetectionOut(
+        camera=CameraStatusOut(connected=True, fps=0.0, frame_count=0, last_error=None, source="browser"),
+        detections=[r.to_dict() for r in recognized],
+        counts=count_products(recognized),
     )
 
 

@@ -4,87 +4,110 @@ import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import { api } from "../api/client.js";
 
+// How often to send a frame to the backend for detection. RT-DETR inference on
+// CPU is slow, so we keep this modest and never send a new frame while one is
+// still being processed (see inFlight guard).
+const DETECT_INTERVAL_MS = 1200;
+
 export default function LiveDetection() {
-  const [status, setStatus] = useState(null);
+  const [live, setLive] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState(null);
   const [detections, setDetections] = useState([]);
   const [counts, setCounts] = useState({});
-  const [pending, setPending] = useState(null); // "start" | "stop" | null
-  const pollRef = useRef(null);
+  const [fps, setFps] = useState(0);
 
-  const refresh = () => {
-    api
-      .get("/live/detections")
-      .then((data) => {
-        setStatus(data.camera);
-        setDetections(data.detections);
-        setCounts(data.counts);
-      })
-      .catch(() => {});
-  };
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const timerRef = useRef(null);
+  const inFlight = useRef(false);
 
-  useEffect(() => {
-    api.get("/live/status").then(setStatus).catch(() => {});
-  }, []);
+  async function captureAndDetect() {
+    if (inFlight.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.videoWidth === 0) return;
 
-  useEffect(() => {
-    const isStarting = pending === "start" || (status && !status.connected && pending);
-    const intervalTime = isStarting ? 300 : 1000;
-    pollRef.current = setInterval(refresh, intervalTime);
-    return () => clearInterval(pollRef.current);
-  }, [pending, status?.connected]);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const image = canvas.toDataURL("image/jpeg", 0.6);
 
-  const [streamKey, setStreamKey] = useState(0);
+    inFlight.current = true;
+    try {
+      const data = await api.post("/live/detect-frame", { image });
+      setDetections(data.detections || []);
+      setCounts(data.counts || {});
+    } catch {
+      /* transient network/inference error — keep the last result */
+    } finally {
+      inFlight.current = false;
+    }
+  }
 
-  const start = () => {
-    if (pending) return; // ignore repeat clicks while a request is in flight
-    setPending("start");
-    api
-      .post("/live/start", {})
-      .then((s) => {
-        setStatus(s);
-        setStreamKey((k) => k + 1); // remount <img> so it opens a fresh MJPEG connection
-      })
-      .finally(() => setPending(null));
-  };
-  const stop = () => {
-    if (pending) return;
-    setPending("stop");
-    api
-      .post("/live/stop", {})
-      .then((s) => {
-        setStatus(s);
-        setDetections([]);
-        setCounts({});
-      })
-      .finally(() => setPending(null));
-  };
+  async function start() {
+    if (starting || live) return;
+    setError(null);
+    setStarting(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      const settings = stream.getVideoTracks()[0]?.getSettings?.() || {};
+      setFps(Math.round(settings.frameRate || 0));
+      setLive(true);
+      timerRef.current = setInterval(captureAndDetect, DETECT_INTERVAL_MS);
+    } catch {
+      setError("Could not access the camera. Allow camera permission in your browser and use HTTPS/localhost.");
+    } finally {
+      setStarting(false);
+    }
+  }
 
-  const isLive = !!status?.connected;
-  const isConnecting = pending === "start" && !isLive;
-  const topConfidence = detections.length
-    ? Math.max(...detections.map((d) => d.confidence)) * 100
-    : 0;
+  function stop() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setLive(false);
+    setDetections([]);
+    setCounts({});
+    setFps(0);
+  }
+
+  // Stop the camera when leaving the page.
+  useEffect(() => () => stop(), []);
+
+  const topConfidence = detections.length ? Math.max(...detections.map((d) => d.confidence)) * 100 : 0;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Live Detection"
-        subtitle="Real-time RT-DETR product detection from the verification tray camera"
+        subtitle="Real-time RT-DETR product detection from your device camera"
         actions={
           <>
             <button
               onClick={start}
-              disabled={!!pending || isLive}
+              disabled={starting || live}
               className="btn-secondary ripple flex items-center gap-2 !py-2 !px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Play size={16} /> {pending === "start" ? "Starting…" : "Start Webcam"}
+              <Play size={16} /> {starting ? "Starting…" : "Start Webcam"}
             </button>
             <button
               onClick={stop}
-              disabled={!!pending || !isLive}
+              disabled={!live}
               className="ripple flex items-center gap-2 !py-2 !px-4 text-sm rounded-xl bg-danger/10 text-danger font-medium hover:bg-danger/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Square size={16} /> {pending === "stop" ? "Stopping…" : "Stop Webcam"}
+              <Square size={16} /> Stop Webcam
             </button>
           </>
         }
@@ -94,30 +117,31 @@ export default function LiveDetection() {
         <div className="xl:col-span-2 flex flex-col gap-6">
           <div
             className={`relative rounded-2xl overflow-hidden bg-black transition-shadow duration-500 ${
-              isLive ? "shadow-glow animate-pulseGlow" : "shadow-soft"
+              live ? "shadow-glow animate-pulseGlow" : "shadow-soft"
             }`}
           >
-            {isLive ? (
-              <img
-                key={streamKey}
-                src="/api/live/stream"
-                alt="live camera feed"
-                className="w-full h-auto block"
-              />
-            ) : (
+            {/* Video is always mounted so the ref exists; hidden until live. */}
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              className={`w-full h-auto block ${live ? "" : "hidden"}`}
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            {!live && (
               <div className="aspect-video flex flex-col items-center justify-center gap-3 text-muted">
                 <VideoOff size={40} strokeWidth={1.2} className="text-danger/70" />
                 <p className="text-sm">Camera is off — press "Start Webcam" to begin.</p>
               </div>
             )}
-            {isLive && (
+            {live && (
               <span className="absolute top-4 left-4 flex items-center gap-1.5 bg-danger text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
               </span>
             )}
-            {isLive && (
+            {live && (
               <span className="absolute top-4 right-4 bg-black/50 backdrop-blur text-white text-xs font-medium px-3 py-1.5 rounded-full">
-                {status?.fps ?? 0} FPS
+                {fps} FPS
               </span>
             )}
           </div>
@@ -147,8 +171,8 @@ export default function LiveDetection() {
                 <ScanEye size={18} className="text-violet" />
               </div>
               <p className="text-xs text-muted">Detection Status</p>
-              <p className={`text-sm font-semibold ${isLive ? "text-success" : isConnecting ? "text-warning" : "text-danger"}`}>
-                {isLive ? "Connected" : isConnecting ? "Connecting…" : "Disconnected"}
+              <p className={`text-sm font-semibold ${live ? "text-success" : starting ? "text-warning" : "text-danger"}`}>
+                {live ? "Connected" : starting ? "Connecting…" : "Disconnected"}
               </p>
             </div>
             <div className="card p-4 flex flex-col gap-2">
@@ -156,7 +180,7 @@ export default function LiveDetection() {
                 <Gauge size={18} className="text-primary" />
               </div>
               <p className="text-xs text-muted">FPS</p>
-              <p className="text-sm font-semibold text-ink">{status?.fps ?? 0}</p>
+              <p className="text-sm font-semibold text-ink">{fps}</p>
             </div>
             <div className="card p-4 flex flex-col gap-2">
               <div className="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center">
@@ -169,8 +193,8 @@ export default function LiveDetection() {
               <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
                 <UserCheck size={18} className="text-success" />
               </div>
-              <p className="text-xs text-muted">Current Worker</p>
-              <p className="text-sm font-semibold text-ink truncate">{status?.source ?? "—"}</p>
+              <p className="text-xs text-muted">Source</p>
+              <p className="text-sm font-semibold text-ink truncate">{live ? "Browser camera" : "—"}</p>
             </div>
           </div>
 
@@ -189,9 +213,9 @@ export default function LiveDetection() {
             </ul>
           </div>
 
-          {status?.last_error && (
+          {error && (
             <div className="rounded-xl bg-danger/10 border border-danger/20 p-4 text-sm text-danger">
-              {status.last_error}
+              {error}
             </div>
           )}
         </div>
