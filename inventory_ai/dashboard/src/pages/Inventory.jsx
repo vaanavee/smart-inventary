@@ -13,7 +13,10 @@ export default function Inventory() {
   const [sortDir, setSortDir] = useState(1);
 
   useEffect(() => {
-    api.get("/inventory").then(setItems).catch(() => {});
+    const refresh = () => api.get("/inventory").then(setItems).catch(() => {});
+    refresh();
+    const poll = setInterval(refresh, 3000);
+    return () => clearInterval(poll);
   }, []);
 
   const categories = useMemo(() => ["", ...new Set(items.map((i) => i.category))], [items]);

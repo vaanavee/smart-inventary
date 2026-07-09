@@ -65,18 +65,28 @@ class WebcamStream:
 
     def stop(self) -> None:
         self._running = False
-        if self._thread is not None:
-            self._thread.join(timeout=3)
-        if self._cap is not None:
-            self._cap.release()
-            self._cap = None
         self.status.connected = False
         self.status.fps = 0.0
         # Clear the last frame so consumers see None (not a frozen final frame)
         # once the camera is powered off.
         with self._lock:
             self._frame = None
-        logger.info("Camera stream stopped")
+
+        # Joining the capture thread and releasing the hardware handle can
+        # take up to a few seconds (mid frame-read, or asleep during a
+        # reconnect backoff). Do that off the request thread so the API
+        # responds instantly and the Stop button never feels stuck.
+        thread, cap = self._thread, self._cap
+
+        def _cleanup() -> None:
+            if thread is not None:
+                thread.join(timeout=5)
+            if cap is not None:
+                cap.release()
+            logger.info("Camera stream stopped")
+
+        threading.Thread(target=_cleanup, daemon=True).start()
+        self._cap = None
 
     def get_frame(self) -> np.ndarray | None:
         with self._lock:

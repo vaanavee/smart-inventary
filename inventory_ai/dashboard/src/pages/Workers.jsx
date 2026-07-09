@@ -38,7 +38,9 @@ export default function Workers() {
   const [deviceStatus, setDeviceStatus] = useState("offline");
 
   useEffect(() => {
-    api.get("/workers").then(setWorkers).catch(() => {});
+    const refreshWorkers = () => api.get("/workers").then(setWorkers).catch(() => {});
+    refreshWorkers();
+    const workersPoll = setInterval(refreshWorkers, 5000);
 
     const fetchStatus = () => {
       fetch("/monitor-api/rfid/device-status")
@@ -55,7 +57,10 @@ export default function Workers() {
 
     fetchStatus();
     const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(workersPoll);
+      clearInterval(interval);
+    };
   }, []);
 
   const departments = useMemo(() => ["", ...new Set(workers.map((w) => w.department))], [workers]);

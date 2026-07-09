@@ -8,6 +8,7 @@ export default function LiveDetection() {
   const [status, setStatus] = useState(null);
   const [detections, setDetections] = useState([]);
   const [counts, setCounts] = useState({});
+  const [pending, setPending] = useState(null); // "start" | "stop" | null
   const pollRef = useRef(null);
 
   const refresh = () => {
@@ -29,19 +30,32 @@ export default function LiveDetection() {
 
   const [streamKey, setStreamKey] = useState(0);
 
-  const start = () =>
-    api.post("/live/start", {}).then((s) => {
-      setStatus(s);
-      setStreamKey((k) => k + 1); // remount <img> so it opens a fresh MJPEG connection
-    });
-  const stop = () =>
-    api.post("/live/stop", {}).then((s) => {
-      setStatus(s);
-      setDetections([]);
-      setCounts({});
-    });
+  const start = () => {
+    if (pending) return; // ignore repeat clicks while a request is in flight
+    setPending("start");
+    api
+      .post("/live/start", {})
+      .then((s) => {
+        setStatus(s);
+        setStreamKey((k) => k + 1); // remount <img> so it opens a fresh MJPEG connection
+      })
+      .finally(() => setPending(null));
+  };
+  const stop = () => {
+    if (pending) return;
+    setPending("stop");
+    api
+      .post("/live/stop", {})
+      .then((s) => {
+        setStatus(s);
+        setDetections([]);
+        setCounts({});
+      })
+      .finally(() => setPending(null));
+  };
 
   const isLive = !!status?.connected;
+  const isConnecting = pending === "start" && !isLive;
   const topConfidence = detections.length
     ? Math.max(...detections.map((d) => d.confidence)) * 100
     : 0;
@@ -53,14 +67,19 @@ export default function LiveDetection() {
         subtitle="Real-time RT-DETR product detection from the verification tray camera"
         actions={
           <>
-            <button onClick={start} className="btn-secondary ripple flex items-center gap-2 !py-2 !px-4 text-sm">
-              <Play size={16} /> Start Webcam
+            <button
+              onClick={start}
+              disabled={!!pending || isLive}
+              className="btn-secondary ripple flex items-center gap-2 !py-2 !px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Play size={16} /> {pending === "start" ? "Starting…" : "Start Webcam"}
             </button>
             <button
               onClick={stop}
-              className="ripple flex items-center gap-2 !py-2 !px-4 text-sm rounded-xl bg-danger/10 text-danger font-medium hover:bg-danger/20 transition-colors"
+              disabled={!!pending || !isLive}
+              className="ripple flex items-center gap-2 !py-2 !px-4 text-sm rounded-xl bg-danger/10 text-danger font-medium hover:bg-danger/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Square size={16} /> Stop Webcam
+              <Square size={16} /> {pending === "stop" ? "Stopping…" : "Stop Webcam"}
             </button>
           </>
         }
@@ -123,8 +142,8 @@ export default function LiveDetection() {
                 <ScanEye size={18} className="text-violet" />
               </div>
               <p className="text-xs text-muted">Detection Status</p>
-              <p className={`text-sm font-semibold ${isLive ? "text-success" : "text-danger"}`}>
-                {isLive ? "Connected" : "Disconnected"}
+              <p className={`text-sm font-semibold ${isLive ? "text-success" : isConnecting ? "text-warning" : "text-danger"}`}>
+                {isLive ? "Connected" : isConnecting ? "Connecting…" : "Disconnected"}
               </p>
             </div>
             <div className="card p-4 flex flex-col gap-2">
