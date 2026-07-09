@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Download, Plus, Users, Cpu } from "lucide-react";
+import { Search, Download, Plus, Users, Radio, Cpu } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import { api } from "../api/client.js";
+import { monitorApi } from "../api/monitorClient.js";
 
 const DEPT_TONE = {
   Warehouse: "primary",
@@ -11,8 +12,13 @@ const DEPT_TONE = {
 
 const TABS = [
   { id: "directory", label: "Team Directory", icon: Users },
+  { id: "rfid", label: "RFID Activity", icon: Radio },
   { id: "device", label: "Device Admin", icon: Cpu },
 ];
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function initials(name) {
   return name
@@ -76,7 +82,13 @@ export default function Workers() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Workers"
-        subtitle={tab === "directory" ? `${filtered.length} team members` : "Device Administration Portal"}
+        subtitle={
+          tab === "directory"
+            ? `${filtered.length} team members`
+            : tab === "rfid"
+              ? "RFID login/logout and rack-tap activity"
+              : "Device Administration Portal"
+        }
         actions={
           tab === "directory" ? (
             <>
@@ -108,7 +120,7 @@ export default function Workers() {
         })}
       </div>
 
-      {tab === "directory" ? (
+      {tab === "directory" && (
         <>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[240px]">
@@ -159,7 +171,11 @@ export default function Workers() {
             </table>
           </div>
         </>
-      ) : (
+      )}
+
+      {tab === "rfid" && <RfidActivityTab />}
+
+      {tab === "device" && (
         <div className="card p-0 overflow-hidden h-[600px] border border-hairline/[0.06] rounded-2xl bg-black/5">
           {deviceIp && deviceStatus === "online" ? (
             <iframe
@@ -175,7 +191,10 @@ export default function Workers() {
               <div>
                 <h3 className="text-lg font-semibold text-ink">Entrance Unit Offline</h3>
                 <p className="text-muted text-sm max-w-md mt-1">
-                  The dashboard is waiting for the physical Entrance Unit ESP32 to connect to the network and check in.
+                  This console loads the device's own admin page directly over your local network, so it
+                  only works when you're on the same WiFi as the ESP32. For login/logout and rack activity
+                  from anywhere, use the <b>RFID Activity</b> tab instead — it reads from the backend, not
+                  the device.
                 </p>
               </div>
               {deviceIp ? (
@@ -199,6 +218,142 @@ export default function Workers() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// RFID login/logout + rack-tap activity, read straight from the backend
+// (works from anywhere, unlike the Device Admin iframe which needs the
+// browser to be on the same LAN as the physical ESP32).
+function RfidActivityTab() {
+  const [current, setCurrent] = useState([]);
+  const [date, setDate] = useState(todayStr());
+  const [history, setHistory] = useState([]);
+  const [rackScans, setRackScans] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const refreshCurrent = () => monitorApi.get("/room-entries/current").then(setCurrent).catch((e) => setError(e.message));
+    const refreshRacks = () => monitorApi.get("/rfid/rack-scans?limit=20").then(setRackScans).catch((e) => setError(e.message));
+    refreshCurrent();
+    refreshRacks();
+    const poll = setInterval(() => {
+      refreshCurrent();
+      refreshRacks();
+    }, 3000);
+    return () => clearInterval(poll);
+  }, []);
+
+  useEffect(() => {
+    monitorApi.get(`/room-entries?date=${date}`).then(setHistory).catch((e) => setError(e.message));
+  }, [date]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {error && <p className="text-sm text-danger">{error}</p>}
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-ink">Currently Inside</h3>
+          <Badge tone="info">{current.length} active</Badge>
+        </div>
+        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
+          {current.map((c) => (
+            <li key={c.emp_id} className="py-3 flex items-center justify-between text-sm">
+              <div>
+                <p className="text-ink font-medium">{c.employee_name}</p>
+                <p className="text-xs text-muted">{c.emp_id} • {c.rfid_tag}</p>
+              </div>
+              <div className="text-right">
+                <Badge tone="success">{c.room}</Badge>
+                <p className="text-xs text-muted mt-1">In since {c.entry_time}</p>
+              </div>
+            </li>
+          ))}
+          {current.length === 0 && <li className="py-3 text-sm text-muted">No one is currently checked in.</li>}
+        </ul>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-ink">Login / Logout History</h3>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="input-field w-auto"
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
+                <th className="pb-3 font-medium">Employee</th>
+                <th className="pb-3 font-medium">Room</th>
+                <th className="pb-3 font-medium">Login</th>
+                <th className="pb-3 font-medium">Logout</th>
+                <th className="pb-3 font-medium">Duration</th>
+                <th className="pb-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h, i) => (
+                <tr key={i} className="border-b border-hairline/[0.04] last:border-0">
+                  <td className="py-3 text-ink font-medium">{h.employee_name}</td>
+                  <td className="py-3 text-muted">{h.room}</td>
+                  <td className="py-3 text-muted">{h.entry_time}</td>
+                  <td className="py-3 text-muted">{h.exit_time || "—"}</td>
+                  <td className="py-3 text-muted">{h.duration || "—"}</td>
+                  <td className="py-3">
+                    <Badge tone={h.status === "Completed" ? "success" : "info"}>{h.status}</Badge>
+                  </td>
+                </tr>
+              ))}
+              {history.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-6 text-center text-muted">
+                    No login/logout activity for this date.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-ink">Rack Activity</h3>
+          <Badge tone="info">{rackScans.length} recent</Badge>
+        </div>
+        <p className="text-xs text-muted mb-4">Which worker went to which room and rack, and what's stocked there.</p>
+        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
+          {rackScans.map((s) => (
+            <li key={s.id} className="py-3 flex flex-col gap-2 text-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-ink font-medium">{s.employee_name}</p>
+                  <p className="text-xs text-muted">{s.emp_id} • {s.rfid_tag}</p>
+                </div>
+                <div className="text-right">
+                  <Badge tone="success">{s.room} / Rack {s.rack}</Badge>
+                  <p className="text-xs text-muted mt-1">{s.date} at {s.time}</p>
+                </div>
+              </div>
+              {s.products?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {s.products.map((p) => (
+                    <span key={p.product_id} className="text-xs rounded-full bg-hairline/[0.06] px-3 py-1 text-muted">
+                      {p.name} — {p.qty} {p.unit}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+          {rackScans.length === 0 && <li className="py-3 text-sm text-muted">No rack taps recorded yet.</li>}
+        </ul>
+      </div>
     </div>
   );
 }
