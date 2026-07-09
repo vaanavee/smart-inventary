@@ -295,11 +295,31 @@ void setup() {
   }
 
   // Connect WiFi
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  delay(100);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to WiFi");
+  Serial.print("Connecting to WiFi \"");
+  Serial.print(WIFI_SSID);
+  Serial.println("\"");
+
+  unsigned long wifiStart = millis();
+  const unsigned long WIFI_TIMEOUT_MS = 20000; // give up and retry after 20s
   while (WiFi.status() != WL_CONNECTED) {
     delay(300);
     Serial.print(".");
+    if (millis() - wifiStart > WIFI_TIMEOUT_MS) {
+      Serial.println();
+      Serial.print("WiFi connect failed, status code: ");
+      Serial.println(WiFi.status());
+      // 1=NO_SSID_AVAIL (SSID not found - check name/2.4GHz band),
+      // 4=CONNECT_FAILED (wrong password), 6=DISCONNECTED
+      Serial.println("Retrying...");
+      WiFi.disconnect(true);
+      delay(500);
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+      wifiStart = millis();
+    }
   }
   Serial.println();
   Serial.print("Entrance Unit IP: ");
