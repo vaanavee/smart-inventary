@@ -3,13 +3,12 @@ import { Camera, Cpu, Sliders, Bell, Moon, Sun, Info, Server, Video, DoorOpen, P
 import PageHeader from "../components/PageHeader.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { CctvTab, EmployeeTab, StockTab, GuidanceTab } from "./Monitoring.jsx";
+import { CctvTab, EmployeeTab, GuidanceTab } from "./Monitoring.jsx";
 import { api } from "../api/client.js";
 
 const MONITORING_TABS = [
   { id: "cctv", label: "CCTV Monitoring", icon: Video },
   { id: "employee", label: "Employee Monitoring", icon: DoorOpen },
-  { id: "stock", label: "Stock Monitoring", icon: Package },
   { id: "guidance", label: "Product Guidance", icon: Search },
 ];
 
@@ -111,7 +110,6 @@ export default function Settings() {
 
           {monitorTab === "cctv" && <CctvTab />}
           {monitorTab === "employee" && <EmployeeTab />}
-          {monitorTab === "stock" && <StockTab />}
           {monitorTab === "guidance" && <GuidanceTab />}
         </div>
       )}

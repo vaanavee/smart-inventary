@@ -7,7 +7,6 @@ import Inventory from "./pages/Inventory.jsx";
 import Verification from "./pages/Verification.jsx";
 import Products from "./pages/Products.jsx";
 import Workers from "./pages/Workers.jsx";
-import History from "./pages/History.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Settings from "./pages/Settings.jsx";
 import QrGenerator from "./pages/QrGenerator.jsx";
@@ -29,7 +28,7 @@ function AppLayout() {
             <Route path="/verification" element={<Verification />} />
             <Route path="/products" element={<Products />} />
             <Route path="/workers" element={<Workers />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/history" element={<Navigate to="/verification" replace />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/monitoring" element={<Navigate to="/settings" replace />} />

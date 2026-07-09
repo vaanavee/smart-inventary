@@ -25,7 +25,6 @@ const LINKS = [
   { to: "/verification", label: "Verification", icon: ScanLine },
   { to: "/products", label: "Products", icon: Package },
   { to: "/workers", label: "Workers", icon: Users },
-  { to: "/history", label: "History", icon: HistoryIcon },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/qr-generator", label: "QR Generator", icon: QrCode, adminOnly: true },
   { to: "/qr-scanner", label: "QR Scanner", icon: ScanLine },

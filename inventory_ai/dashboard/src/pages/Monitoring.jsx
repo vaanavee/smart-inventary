@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, CameraOff, Power, DoorOpen, Package, Search, AlertCircle, Users, UserX, Gauge, Clock, ArrowRight, PackageCheck } from "lucide-react";
+import { Camera, CameraOff, Power, DoorOpen, Package, Search, AlertCircle, Users, UserX, Gauge, Clock, ArrowRight } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
-import ProgressBar from "../components/ProgressBar.jsx";
 import { monitorApi } from "../api/monitorClient.js";
 
 const AI_BASE_URL = "/monitor-ai-api";
@@ -13,7 +12,6 @@ const RACKS = ["A", "B", "C", "D", "E"];
 const TABS = [
   { id: "cctv", label: "CCTV Monitoring", icon: Camera },
   { id: "employee", label: "Employee Monitoring", icon: DoorOpen },
-  { id: "stock", label: "Stock Monitoring", icon: Package },
   { id: "guidance", label: "Product Guidance", icon: Search },
 ];
 
@@ -47,7 +45,6 @@ export default function Monitoring() {
 
       {tab === "cctv" && <CctvTab />}
       {tab === "employee" && <EmployeeTab />}
-      {tab === "stock" && <StockTab />}
       {tab === "guidance" && <GuidanceTab />}
     </div>
   );
@@ -365,153 +362,6 @@ function useCatalog() {
   }, []);
 
   return { catalog, loading, error };
-}
-
-export function StockTab() {
-  const [overview, setOverview] = useState([]);
-  const [rackScans, setRackScans] = useState([]);
-  const { catalog, loading } = useCatalog();
-
-  useEffect(() => {
-    const refreshOverview = () => monitorApi.get("/products/overview").then(setOverview).catch(() => {});
-    refreshOverview();
-    const poll = setInterval(refreshOverview, 5000);
-    return () => clearInterval(poll);
-  }, []);
-
-  useEffect(() => {
-    const refresh = () => monitorApi.get("/rfid/rack-scans?limit=20").then(setRackScans).catch(() => {});
-    refresh();
-    const poll = setInterval(refresh, 2000);
-    return () => clearInterval(poll);
-  }, []);
-
-  const totalProducts = catalog.length;
-  const totalQty = catalog.reduce((sum, p) => sum + p.qty, 0);
-  const lowStock = catalog.filter((p) => p.qty < 50);
-  const outOfStock = catalog.filter((p) => p.qty === 0);
-  const maxQty = Math.max(1, ...catalog.map((p) => p.qty));
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="card p-5">
-          <p className="text-xs text-muted mb-1">Total Products</p>
-          <p className="text-2xl font-semibold text-ink">{totalProducts}</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-muted mb-1">Total Units</p>
-          <p className="text-2xl font-semibold text-ink">{totalQty}</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-muted mb-1">Low Stock (&lt;50 units)</p>
-          <p className="text-2xl font-semibold text-warning">{lowStock.length}</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-muted mb-1">Out of Stock</p>
-          <p className="text-2xl font-semibold text-danger">{outOfStock.length}</p>
-        </div>
-      </div>
-
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-ink">Recent Rack Taps</h3>
-          <Badge tone="info">{rackScans.length} recent</Badge>
-        </div>
-        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
-          {rackScans.map((s) => (
-            <li key={s.id} className="py-3 flex flex-col gap-2 text-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-ink font-medium">{s.employee_name}</p>
-                  <p className="text-xs text-muted">{s.emp_id} • {s.rfid_tag}</p>
-                </div>
-                <div className="text-right">
-                  <Badge tone="success">{s.room} / Rack {s.rack}</Badge>
-                  <p className="text-xs text-muted mt-1">at {s.time}</p>
-                </div>
-              </div>
-              {s.products.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {s.products.map((p) => (
-                    <span key={p.product_id} className="text-xs rounded-full bg-hairline/[0.06] px-3 py-1 text-muted">
-                      {p.name} — {p.qty} {p.unit}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted">No products recorded at this rack.</p>
-              )}
-            </li>
-          ))}
-          {rackScans.length === 0 && <li className="py-3 text-sm text-muted">No rack taps yet.</li>}
-        </ul>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-ink mb-4">Stock by Room / Rack</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {overview.map((room) => (
-            <div key={room.room}>
-              <p className="text-sm font-medium text-ink mb-3">{room.room}</p>
-              <ul className="flex flex-col gap-2">
-                {room.racks.map((r) => (
-                  <li key={r.rack} className="text-xs text-muted flex justify-between">
-                    <span>Rack {r.rack}</span>
-                    <span>{r.totalQty} units / {r.productCount} SKUs</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="card p-6 overflow-x-auto">
-        <h3 className="font-semibold text-ink mb-4">All Products</h3>
-        {loading ? (
-          <p className="text-sm text-muted">Loading catalog…</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
-                <th className="pb-3 font-medium">Product</th>
-                <th className="pb-3 font-medium">Location</th>
-                <th className="pb-3 font-medium">Quantity</th>
-                <th className="pb-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {catalog.map((p) => (
-                <tr key={p.product_id} className="border-b border-hairline/[0.04] last:border-0">
-                  <td className="py-3">
-                    <p className="text-ink font-medium">{p.name}</p>
-                    <p className="text-xs text-muted">{p.product_id}</p>
-                  </td>
-                  <td className="py-3 text-muted">{p.room} / {p.rack}</td>
-                  <td className="py-3 w-48">
-                    <div className="flex items-center gap-2">
-                      <ProgressBar value={p.qty} max={maxQty} tone={p.qty < 50 ? "warning" : "primary"} />
-                      <span className="text-xs text-muted whitespace-nowrap">{p.qty} {p.unit}</span>
-                    </div>
-                  </td>
-                  <td className="py-3">
-                    {p.qty === 0 ? (
-                      <Badge tone="danger">Out of Stock</Badge>
-                    ) : p.qty < 50 ? (
-                      <Badge tone="warning">Low Stock</Badge>
-                    ) : (
-                      <Badge tone="success">Healthy</Badge>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export function GuidanceTab() {
