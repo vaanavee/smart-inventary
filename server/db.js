@@ -2,7 +2,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { DatabaseSync } = require('node:sqlite');
 
-const db = new DatabaseSync(path.join(__dirname, 'data.db'));
+const db = new DatabaseSync(process.env.DB_PATH || path.join(__dirname, 'data.db'));
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS admins (
@@ -80,6 +80,39 @@ CREATE TABLE IF NOT EXISTS alerts (
   time TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'open'
 );
+
+-- Box moved between rooms by an employee, detected by the monitor AI service
+-- (vision "carrying a box" + RFID room transition). product_* stays null until
+-- resolved (e.g. by pairing with a scanned product QR).
+CREATE TABLE IF NOT EXISTS box_transfers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  emp_id TEXT,
+  employee_name TEXT,
+  from_room TEXT NOT NULL,
+  to_room TEXT NOT NULL,
+  product_id TEXT,
+  product_name TEXT,
+  start_time TEXT,
+  end_time TEXT,
+  source TEXT NOT NULL DEFAULT 'vision',
+  status TEXT NOT NULL DEFAULT 'Completed'
+);
+
+-- RFID tap logged at a rack reader (RackUnit ESP32). Requires the employee to
+-- already have an open room_entries session (they must be checked in via the
+-- EntranceUnit first) - a tap from someone not checked in is rejected, not
+-- silently logged.
+CREATE TABLE IF NOT EXISTS rack_scans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  emp_id TEXT NOT NULL,
+  employee_name TEXT NOT NULL,
+  rfid_tag TEXT NOT NULL,
+  room TEXT NOT NULL,
+  rack TEXT NOT NULL,
+  time TEXT NOT NULL
+);
 `);
 
 // Migration: employees table may pre-date the password_hash column (added for
@@ -137,6 +170,24 @@ function seedIfEmpty() {
       db.exec('COMMIT');
     }
   }
+
+  // Real physical RFID cards (from the RFID_Attendance_Standalone sketch) mapped
+  // to actual employees, so EntranceUnit.ino's checkin/checkout taps resolve to a
+  // known employee instead of 404ing. Upserted by rfid_tag every startup (not
+  // gated on empCount===0) so it still runs after the initial EMP001-005 seed.
+  const realCardHolders = [
+    ['EMP101', 'Vishali', '4E500E06', 'Inventory', '09:00-03:00'],
+    ['EMP102', 'Suraj', 'CC392B1F', 'Warehouse', '09:00-03:00'],
+    ['EMP103', 'Vishal', 'B3122A22', 'Stock Control', '09:00-03:00'],
+    ['EMP104', 'Vaanavee', '0EB46F06', 'Packing', '09:00-03:00'],
+  ];
+  const insertRealEmployee = db.prepare(
+    'INSERT OR IGNORE INTO employees (emp_id, name, rfid_tag, department, shift, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  const realEmployeeHash = bcrypt.hashSync(DEFAULT_EMPLOYEE_PASSWORD, 10);
+  db.exec('BEGIN');
+  realCardHolders.forEach((r) => insertRealEmployee.run(...r, realEmployeeHash));
+  db.exec('COMMIT');
 
   const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;
   if (productCount === 0) {
@@ -311,6 +362,26 @@ function seedIfEmpty() {
         insert.run(date, person.emp, person.name, person.rfid, person.room, person.in, exit, duration, status);
       });
     });
+    db.exec('COMMIT');
+  }
+
+  // A few demo box transfers so the dashboard's Box Transfers view has data
+  // before the vision model is trained. Real transfers are inserted live by the
+  // monitor AI service via POST /api/transfers.
+  const transferCount = db.prepare('SELECT COUNT(*) AS c FROM box_transfers').get().c;
+  if (transferCount === 0) {
+    const insert = db.prepare(
+      `INSERT INTO box_transfers (date, emp_id, employee_name, from_room, to_room, product_id, product_name, start_time, end_time, source, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    const today = '2026-07-05';
+    const demo = [
+      [today, 'EMP001', 'Akash', 'Room 1', 'Room 2', 'ST001', 'A4 Paper Bundle', '10:12', '10:15', 'vision+qr', 'Completed'],
+      [today, 'EMP003', 'Arjun', 'Room 2', 'Room 3', null, null, '11:48', '11:52', 'vision', 'Completed'],
+      [today, 'EMP004', 'Priya', 'Room 3', 'Room 1', 'DC006', 'Gift Boxes', '13:05', '13:09', 'vision+qr', 'Completed'],
+    ];
+    db.exec('BEGIN');
+    demo.forEach((r) => insert.run(...r));
     db.exec('COMMIT');
   }
 }

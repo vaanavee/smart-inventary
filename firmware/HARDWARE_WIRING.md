@@ -51,10 +51,13 @@ Unit** — wire both sets the same way.
   power bank) — this also powers the attached MFRC522 through the
   board's 3.3V rail.
 - The two units are physically separate and do not share power or
-  ground — they only communicate over WiFi (see
-  [EntranceUnit.ino](EntranceUnit/EntranceUnit.ino) and
-  [RackUnit.ino](RackUnit/RackUnit.ino) for the network setup:
-  SSID `InventoryESP32`, Entrance Unit at `192.168.4.1`).
+  ground. Both join your **regular WiFi network** (not a standalone
+  Access Point) and both talk directly to the Node backend's REST API —
+  see [EntranceUnit.ino](EntranceUnit/EntranceUnit.ino) and
+  [RackUnit.ino](RackUnit/RackUnit.ino): fill in `WIFI_SSID`,
+  `WIFI_PASSWORD`, and `SERVER_HOST` (the LAN IP of the computer running
+  `server/index.js`, e.g. from `ipconfig`) near the top of each file
+  before flashing.
 
 ## Changing the pins
 

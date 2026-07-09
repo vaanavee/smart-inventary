@@ -182,23 +182,31 @@ export default function QrScanner() {
 
               <div className="flex items-center justify-center gap-3 py-3 rounded-xl bg-hairline/[0.04]">
                 <div className="text-center">
-                  <p className="text-[11px] uppercase tracking-wide text-muted">Source</p>
+                  <p className="text-[11px] uppercase tracking-wide text-muted">Origin / Source</p>
                   <Badge tone="info">{result.src || "—"}</Badge>
                 </div>
-                <ArrowRight size={20} className="text-primary" />
-                <div className="text-center">
-                  <p className="text-[11px] uppercase tracking-wide text-muted">Destination</p>
-                  <Badge tone="success">{result.dst || "—"}</Badge>
-                </div>
+                {result.dst && (
+                  <>
+                    <ArrowRight size={20} className="text-primary" />
+                    <div className="text-center">
+                      <p className="text-[11px] uppercase tracking-wide text-muted">Destination</p>
+                      <Badge tone="success">{result.dst}</Badge>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
-                <span className="text-muted">Quantity</span><span className="text-ink text-right font-medium">{result.qty}</span>
+                <span className="text-muted">Stock Quantity</span><span className="text-ink text-right font-medium">{result.qty}</span>
                 <span className="text-muted">SKU</span><span className="text-ink text-right">{result.sku}</span>
                 <span className="text-muted">Box</span><span className="text-ink text-right">{result.box}</span>
-                <span className="text-muted">Rack</span><span className="text-ink text-right">{result.rack}</span>
                 <span className="text-muted">Category</span><span className="text-ink text-right">{result.category}</span>
-                <span className="text-muted">Min / Max</span><span className="text-ink text-right">{result.min} / {result.max}</span>
+                {result.min != null && result.max != null && (
+                  <>
+                    <span className="text-muted">Min / Max</span>
+                    <span className="text-ink text-right">{result.min} / {result.max}</span>
+                  </>
+                )}
               </div>
 
               <button onClick={reset} className="btn-secondary ripple flex items-center justify-center gap-2 text-sm mt-1">

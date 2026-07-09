@@ -6,12 +6,19 @@ device index or an RTSP/GigE URI) — no code in this class changes.
 """
 from __future__ import annotations
 
+import platform
 import threading
 import time
 from dataclasses import dataclass, field
 
 import cv2
 import numpy as np
+
+# On Windows, cv2.VideoCapture's default backend (MSMF) is prone to
+# intermittent frame-read failures that make the camera look like it's
+# constantly reconnecting. DirectShow is far more stable for USB/laptop
+# webcams on Windows; other platforms keep OpenCV's own default.
+_CAPTURE_BACKEND = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_ANY
 
 from backend.config.settings import settings
 from backend.utils.logger import get_logger
@@ -51,6 +58,7 @@ class WebcamStream:
             logger.warning("Camera already running")
             return
         self._running = True
+        self.status.fps = TARGET_FPS
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         logger.info("Camera stream started (source=%s)", self.source)
@@ -63,6 +71,11 @@ class WebcamStream:
             self._cap.release()
             self._cap = None
         self.status.connected = False
+        self.status.fps = 0.0
+        # Clear the last frame so consumers see None (not a frozen final frame)
+        # once the camera is powered off.
+        with self._lock:
+            self._frame = None
         logger.info("Camera stream stopped")
 
     def get_frame(self) -> np.ndarray | None:
@@ -71,7 +84,8 @@ class WebcamStream:
 
     def _open_capture(self) -> bool:
         try:
-            cap = cv2.VideoCapture(self.source)
+            backend = _CAPTURE_BACKEND if isinstance(self.source, int) else cv2.CAP_ANY
+            cap = cv2.VideoCapture(self.source, backend)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, settings.camera_width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, settings.camera_height)
             cap.set(cv2.CAP_PROP_FPS, TARGET_FPS)

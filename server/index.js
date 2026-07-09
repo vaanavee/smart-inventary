@@ -14,6 +14,7 @@ const cctvRoutes = require('./routes/cctv');
 const rfidRoutes = require('./routes/rfid');
 const alertRoutes = require('./routes/alerts');
 const monitorRoutes = require('./routes/monitor');
+const transferRoutes = require('./routes/transfers');
 
 const app = express();
 app.use(cors());
@@ -29,6 +30,7 @@ app.use('/api/cctv', cctvRoutes);
 app.use('/api/rfid', rfidRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/monitor', monitorRoutes);
+app.use('/api/transfers', transferRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, DoorOpen, Package, Search, AlertCircle, Users, UserX, Gauge, Clock } from "lucide-react";
+import { Camera, CameraOff, Power, DoorOpen, Package, Search, AlertCircle, Users, UserX, Gauge, Clock, ArrowRight, PackageCheck } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 import { monitorApi } from "../api/monitorClient.js";
 
-const CAMERA_ZONES = [
-  { id: "room1", label: "Room 1 (Webcam)", baseUrl: "/monitor-ai-api" },
-  { id: "entrance", label: "Entrance (IP Camera)", baseUrl: "/monitor-ai-api-entrance" },
-];
+const AI_BASE_URL = "/monitor-ai-api";
 
 const ROOMS = ["Room 1", "Room 2", "Room 3"];
 const RACKS = ["A", "B", "C", "D", "E"];
@@ -56,52 +53,16 @@ export default function Monitoring() {
   );
 }
 
-function CctvTab() {
-  const [zone, setZone] = useState(CAMERA_ZONES[0].id);
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="card p-4 flex items-start gap-3 bg-info/[0.04] border-info/20">
-        <AlertCircle size={18} className="text-info shrink-0 mt-0.5" />
-        <p className="text-xs text-muted leading-relaxed">
-          Identity matching assigns tracked people to active RFID sessions by order of
-          appearance (oldest unassigned check-in claims the next new track) — it is not
-          biometric face recognition, and works best with one new person entering at a time.
-        </p>
-      </div>
-
-      <div className="inline-flex flex-wrap rounded-xl bg-hairline/[0.05] p-1 gap-1 w-fit">
-        {CAMERA_ZONES.map((z) => (
-          <button
-            key={z.id}
-            onClick={() => setZone(z.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              zone === z.id ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
-            }`}
-          >
-            {z.label}
-          </button>
-        ))}
-      </div>
-
-      {CAMERA_ZONES.filter((z) => z.id === zone).map((z) => (
-        <CameraZoneFeed key={z.id} baseUrl={z.baseUrl} />
-      ))}
-    </div>
-  );
-}
-
-function CameraZoneFeed({ baseUrl }) {
+export function CctvTab() {
   const [live, setLive] = useState(null);
   const [error, setError] = useState(null);
   const [now, setNow] = useState(new Date());
   const [streamKey] = useState(() => Date.now());
+  const [powering, setPowering] = useState(false);
 
   useEffect(() => {
-    setLive(null);
-    setError(null);
     const refresh = () => {
-      fetch(`${baseUrl}/live`)
+      fetch(`${AI_BASE_URL}/live`)
         .then((res) => {
           if (!res.ok) throw new Error(`AI service returned ${res.status}`);
           return res.json();
@@ -116,13 +77,53 @@ function CameraZoneFeed({ baseUrl }) {
       clearInterval(poll);
       clearInterval(clock);
     };
-  }, [baseUrl]);
+  }, []);
 
   const cameraOnline = !!live?.camera_connected;
+  const powerOn = !!live?.power_on;
+
+  async function toggleCamera() {
+    setPowering(true);
+    setError(null);
+    try {
+      await fetch(`${AI_BASE_URL}/camera/${powerOn ? "off" : "on"}`, { method: "POST" });
+      const res = await fetch(`${AI_BASE_URL}/live`);
+      if (res.ok) setLive(await res.json());
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setPowering(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="card p-4 flex items-start gap-3 bg-info/[0.04] border-info/20">
+        <AlertCircle size={18} className="text-info shrink-0 mt-0.5" />
+        <p className="text-xs text-muted leading-relaxed">
+          Identity matching assigns tracked people to active RFID sessions by order of
+          appearance (oldest unassigned check-in claims the next new track) — it is not
+          biometric face recognition, and works best with one new person entering at a time.
+        </p>
+      </div>
+
       {error && <p className="text-sm text-danger">{error}</p>}
+
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <span className={`w-2.5 h-2.5 rounded-full ${powerOn ? (cameraOnline ? "bg-success" : "bg-warning") : "bg-danger"}`} />
+          <span className="text-sm text-muted">
+            IP Camera {powerOn ? (cameraOnline ? "on" : "starting…") : "off"}
+          </span>
+        </div>
+        <button
+          onClick={toggleCamera}
+          disabled={powering}
+          className={`ripple flex items-center gap-2 text-sm ${powerOn ? "btn-secondary" : "btn-primary"} ${powering ? "opacity-60 cursor-wait" : ""}`}
+        >
+          <Power size={16} /> {powering ? "…" : powerOn ? "Turn Camera Off" : "Turn Camera On"}
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="card p-4 flex flex-col gap-1">
@@ -155,12 +156,19 @@ function CameraZoneFeed({ baseUrl }) {
       </div>
 
       <div className="card overflow-hidden">
-        <img
-          key={streamKey}
-          src={`${baseUrl}/stream`}
-          alt={`Live feed — ${live?.room ?? "camera"}`}
-          className="w-full h-auto bg-black block"
-        />
+        {powerOn ? (
+          <img
+            key={streamKey}
+            src={`${AI_BASE_URL}/stream`}
+            alt={`Live feed — ${live?.room ?? "camera"}`}
+            className="w-full h-auto bg-black block"
+          />
+        ) : (
+          <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-black/40 text-muted">
+            <CameraOff size={40} strokeWidth={1.2} className="text-danger/70" />
+            <p className="text-sm">Camera is off — press “Turn Camera On” to start the live feed.</p>
+          </div>
+        )}
       </div>
 
       <div className="card p-6">
@@ -175,6 +183,9 @@ function CameraZoneFeed({ baseUrl }) {
               <p className="text-xs text-muted">Tracking ID: {t.tracker_id}</p>
               {t.entry_time && <p className="text-xs text-muted">Entered: {t.entry_time}</p>}
               <p className="text-xs text-muted">Confidence: {(t.confidence * 100).toFixed(0)}%</p>
+              {t.carrying && (
+                <span className="mt-1"><Badge tone="warning" dot>Carrying box</Badge></span>
+              )}
             </div>
           ))}
           {(!live?.tracks || live.tracks.length === 0) && (
@@ -186,10 +197,11 @@ function CameraZoneFeed({ baseUrl }) {
   );
 }
 
-function EmployeeTab() {
+export function EmployeeTab() {
   const [current, setCurrent] = useState([]);
   const [date, setDate] = useState(todayStr());
   const [history, setHistory] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -198,6 +210,7 @@ function EmployeeTab() {
 
   useEffect(() => {
     monitorApi.get(`/room-entries?date=${date}`).then(setHistory).catch((e) => setError(e.message));
+    monitorApi.get(`/transfers?date=${date}`).then(setTransfers).catch(() => {});
   }, [date]);
 
   return (
@@ -272,6 +285,55 @@ function EmployeeTab() {
           </table>
         </div>
       </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <PackageCheck size={18} className="text-primary" />
+            <h3 className="font-semibold text-ink">Box Transfers</h3>
+          </div>
+          <Badge tone="info">{transfers.length} on {date}</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
+                <th className="pb-3 font-medium">Employee</th>
+                <th className="pb-3 font-medium">Movement</th>
+                <th className="pb-3 font-medium">Product</th>
+                <th className="pb-3 font-medium">Time</th>
+                <th className="pb-3 font-medium">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transfers.map((t) => (
+                <tr key={t.id} className="border-b border-hairline/[0.04] last:border-0">
+                  <td className="py-3 text-ink font-medium">{t.employee_name || "—"}</td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Badge tone="info">{t.from_room}</Badge>
+                      <ArrowRight size={14} className="text-primary" />
+                      <Badge tone="success">{t.to_room}</Badge>
+                    </span>
+                  </td>
+                  <td className="py-3 text-muted">{t.product_name || "Unidentified box"}</td>
+                  <td className="py-3 text-muted">{t.start_time || t.end_time || "—"}</td>
+                  <td className="py-3">
+                    <Badge tone={t.source === "vision+qr" ? "success" : "neutral"}>{t.source}</Badge>
+                  </td>
+                </tr>
+              ))}
+              {transfers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-muted">
+                    No box transfers detected for this date.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -296,12 +358,20 @@ function useCatalog() {
   return { catalog, loading, error };
 }
 
-function StockTab() {
+export function StockTab() {
   const [overview, setOverview] = useState([]);
+  const [rackScans, setRackScans] = useState([]);
   const { catalog, loading } = useCatalog();
 
   useEffect(() => {
     monitorApi.get("/products/overview").then(setOverview).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => monitorApi.get("/rfid/rack-scans?limit=20").then(setRackScans).catch(() => {});
+    refresh();
+    const poll = setInterval(refresh, 2000);
+    return () => clearInterval(poll);
   }, []);
 
   const totalProducts = catalog.length;
@@ -329,6 +399,41 @@ function StockTab() {
           <p className="text-xs text-muted mb-1">Out of Stock</p>
           <p className="text-2xl font-semibold text-danger">{outOfStock.length}</p>
         </div>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-ink">Recent Rack Taps</h3>
+          <Badge tone="info">{rackScans.length} recent</Badge>
+        </div>
+        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
+          {rackScans.map((s) => (
+            <li key={s.id} className="py-3 flex flex-col gap-2 text-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-ink font-medium">{s.employee_name}</p>
+                  <p className="text-xs text-muted">{s.emp_id} • {s.rfid_tag}</p>
+                </div>
+                <div className="text-right">
+                  <Badge tone="success">{s.room} / Rack {s.rack}</Badge>
+                  <p className="text-xs text-muted mt-1">at {s.time}</p>
+                </div>
+              </div>
+              {s.products.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {s.products.map((p) => (
+                    <span key={p.product_id} className="text-xs rounded-full bg-hairline/[0.06] px-3 py-1 text-muted">
+                      {p.name} — {p.qty} {p.unit}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted">No products recorded at this rack.</p>
+              )}
+            </li>
+          ))}
+          {rackScans.length === 0 && <li className="py-3 text-sm text-muted">No rack taps yet.</li>}
+        </ul>
       </div>
 
       <div className="card p-6">
@@ -397,7 +502,7 @@ function StockTab() {
   );
 }
 
-function GuidanceTab() {
+export function GuidanceTab() {
   const { catalog, loading } = useCatalog();
   const [query, setQuery] = useState("");
 

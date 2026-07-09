@@ -1,0 +1,25 @@
+.venv
+venv
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+# The React dashboard is built by its own Dockerfile
+dashboard
+# Local SQLite DBs, logs and model caches — never bake into the image
+database/*.db
+database/*.db-*
+backend/logs
+backend/models/checkpoints
+# Training data (git-ignored anyway)
+dataset/images
+dataset/labels
+# Secrets
+.env
+.env.*
+backend/monitor_service/.env
+# Docker / VCS
+Dockerfile
+.dockerignore
+.git
+.gitignore

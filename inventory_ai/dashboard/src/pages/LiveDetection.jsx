@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Square, Gauge, ScanEye, Percent, UserCheck } from "lucide-react";
+import { Play, Square, Gauge, ScanEye, Percent, UserCheck, VideoOff } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import { api } from "../api/client.js";
@@ -27,8 +27,19 @@ export default function LiveDetection() {
     return () => clearInterval(pollRef.current);
   }, []);
 
-  const start = () => api.post("/live/start", {}).then(setStatus);
-  const stop = () => api.post("/live/stop", {}).then(setStatus);
+  const [streamKey, setStreamKey] = useState(0);
+
+  const start = () =>
+    api.post("/live/start", {}).then((s) => {
+      setStatus(s);
+      setStreamKey((k) => k + 1); // remount <img> so it opens a fresh MJPEG connection
+    });
+  const stop = () =>
+    api.post("/live/stop", {}).then((s) => {
+      setStatus(s);
+      setDetections([]);
+      setCounts({});
+    });
 
   const isLive = !!status?.connected;
   const topConfidence = detections.length
@@ -62,15 +73,29 @@ export default function LiveDetection() {
               isLive ? "shadow-glow animate-pulseGlow" : "shadow-soft"
             }`}
           >
-            <img src="/api/live/stream" alt="live camera feed" className="w-full h-auto block" />
+            {isLive ? (
+              <img
+                key={streamKey}
+                src="/api/live/stream"
+                alt="live camera feed"
+                className="w-full h-auto block"
+              />
+            ) : (
+              <div className="aspect-video flex flex-col items-center justify-center gap-3 text-muted">
+                <VideoOff size={40} strokeWidth={1.2} className="text-danger/70" />
+                <p className="text-sm">Camera is off — press "Start Webcam" to begin.</p>
+              </div>
+            )}
             {isLive && (
               <span className="absolute top-4 left-4 flex items-center gap-1.5 bg-danger text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
               </span>
             )}
-            <span className="absolute top-4 right-4 bg-black/50 backdrop-blur text-white text-xs font-medium px-3 py-1.5 rounded-full">
-              {status?.fps ?? 0} FPS
-            </span>
+            {isLive && (
+              <span className="absolute top-4 right-4 bg-black/50 backdrop-blur text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                {status?.fps ?? 0} FPS
+              </span>
+            )}
           </div>
 
           <div className="card p-6">

@@ -23,6 +23,27 @@ export function encodeProductQR(p) {
   });
 }
 
+// Manual entry: admin types origin, product name, and stock qty directly
+// (no catalog lookup) - e.g. for a newly arrived box that isn't in the
+// catalog yet. Uses the same payload shape so the scanner needs no changes.
+export function encodeManualQR({ name, origin, qty, category }) {
+  return JSON.stringify({
+    t: QR_TYPE,
+    v: 1,
+    name,
+    sku: "MANUAL",
+    box: "-",
+    category: category || "Manual Entry",
+    rack: origin,
+    qty: Number(qty) || 0,
+    min: null,
+    max: null,
+    src: origin,
+    dst: "",
+    ts: new Date().toISOString(),
+  });
+}
+
 // Returns the decoded object, or throws if the text is not a WisRight product QR.
 export function decodeProductQR(text) {
   let data;

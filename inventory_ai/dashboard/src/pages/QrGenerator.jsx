@@ -6,7 +6,7 @@ import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import { api } from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import { encodeProductQR } from "../utils/qrPayload.js";
+import { encodeProductQR, encodeManualQR } from "../utils/qrPayload.js";
 
 const CATEGORY_TONE = {
   Stationery: "primary",
@@ -20,6 +20,7 @@ const RACKS = Array.from({ length: 7 }, (_, i) => `R${i + 1}`);
 
 export default function QrGenerator() {
   const { user } = useAuth();
+  const [mode, setMode] = useState("catalog"); // "catalog" | "manual"
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -27,6 +28,12 @@ export default function QrGenerator() {
   const [src, setSrc] = useState("");
   const [dst, setDst] = useState("");
   const canvasRef = useRef(null);
+
+  const [manualName, setManualName] = useState("");
+  const [manualOrigin, setManualOrigin] = useState("");
+  const [manualQty, setManualQty] = useState("");
+  const [manualCategory, setManualCategory] = useState("");
+  const manualCanvasRef = useRef(null);
 
   useEffect(() => {
     api.get("/products").then(setProducts).catch(() => {});
@@ -75,12 +82,120 @@ export default function QrGenerator() {
     a.click();
   }
 
+  const manualValue = useMemo(() => {
+    if (!manualName || !manualOrigin) return "";
+    return encodeManualQR({ name: manualName, origin: manualOrigin, qty: manualQty, category: manualCategory });
+  }, [manualName, manualOrigin, manualQty, manualCategory]);
+
+  function downloadManualPng() {
+    if (!manualCanvasRef.current || !manualValue) return;
+    const url = manualCanvasRef.current.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${manualName}-manual.png`.replace(/\s+/g, "_");
+    a.click();
+  }
+
   if (user?.role !== "admin") return <Navigate to="/" replace />;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="QR Generator" subtitle="Create product QR codes for stock movement" />
 
+      <div className="inline-flex self-start rounded-xl bg-hairline/[0.05] p-1">
+        <button
+          onClick={() => setMode("catalog")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === "catalog" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+          }`}
+        >
+          From Catalog
+        </button>
+        <button
+          onClick={() => setMode("manual")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === "manual" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+          }`}
+        >
+          Manual Entry
+        </button>
+      </div>
+
+      {mode === "manual" ? (
+        <div className="card p-6 flex flex-col gap-5 max-w-2xl">
+          <div>
+            <h3 className="font-semibold text-ink mb-1">Manual Product Entry</h3>
+            <p className="text-sm text-muted">
+              Type in a product that isn't in the catalog yet — where it came from, its name, and how much stock —
+              and generate a QR code for it.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="text-xs text-muted">Product Name</span>
+              <input
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="e.g. Bubble Wrap Roll"
+                className="input-field"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">Origin (where it came from)</span>
+              <input
+                value={manualOrigin}
+                onChange={(e) => setManualOrigin(e.target.value)}
+                placeholder="e.g. Supplier - Chennai / Room 2"
+                className="input-field"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">Stock Quantity</span>
+              <input
+                type="number"
+                min={0}
+                value={manualQty}
+                onChange={(e) => setManualQty(e.target.value)}
+                placeholder="0"
+                className="input-field"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="text-xs text-muted">Category (optional)</span>
+              <input
+                value={manualCategory}
+                onChange={(e) => setManualCategory(e.target.value)}
+                placeholder="e.g. Packaging"
+                className="input-field"
+              />
+            </label>
+          </div>
+
+          {manualValue ? (
+            <div className="flex flex-col sm:flex-row items-center gap-5 pt-1">
+              <div className="p-4 bg-white rounded-2xl shadow-soft shrink-0">
+                <QRCodeCanvas ref={manualCanvasRef} value={manualValue} size={200} marginSize={2} level="M" />
+              </div>
+              <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <div className="text-xs text-muted grid grid-cols-2 gap-x-4 gap-y-1.5 mb-2">
+                  <span>Product</span><span className="text-ink text-right">{manualName}</span>
+                  <span>Origin</span><span className="text-ink text-right">{manualOrigin}</span>
+                  <span>Stock</span><span className="text-ink text-right">{manualQty || 0}</span>
+                </div>
+                <button onClick={downloadManualPng} className="btn-primary ripple flex items-center justify-center gap-2 text-sm">
+                  <Download size={16} /> Download PNG
+                </button>
+                <button onClick={() => window.print()} className="btn-secondary ripple flex items-center justify-center gap-2 text-sm">
+                  <Printer size={16} /> Print
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted py-4 text-center">Enter a product name and origin to generate a QR code.</p>
+          )}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-6">
         {/* Product picker */}
         <div className="card p-5 flex flex-col gap-4">
@@ -198,6 +313,7 @@ export default function QrGenerator() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -67,6 +67,13 @@ class NodeClient:
             return []
         return [s for s in resp.json() if s.get("room") == room]
 
+    def all_current_sessions(self) -> list[dict]:
+        """Open RFID sessions across every room (used to detect A->B transitions)."""
+        resp = self._authed_get("/room-entries/current")
+        if resp is None:
+            return []
+        return resp.json()
+
     def post_alert(self, alert_type: str, room: str, person: str | None = None) -> None:
         try:
             httpx.post(
@@ -86,3 +93,10 @@ class NodeClient:
             )
         except Exception as exc:  # noqa: BLE001
             logger.error("Could not post detection to Node backend: %s", exc)
+
+    def post_transfer(self, transfer: dict) -> None:
+        """Record a detected box transfer (room A -> room B while carrying a box)."""
+        try:
+            httpx.post(f"{NODE_API_URL}/transfers", json=transfer, timeout=3.0)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Could not post transfer to Node backend: %s", exc)

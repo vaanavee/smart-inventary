@@ -1,6 +1,16 @@
-import { Camera, Cpu, Sliders, Bell, Moon, Sun, Info, Server } from "lucide-react";
+import { useState } from "react";
+import { Camera, Cpu, Sliders, Bell, Moon, Sun, Info, Server, Video, DoorOpen, Package, Search } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { CctvTab, EmployeeTab, StockTab, GuidanceTab } from "./Monitoring.jsx";
+
+const MONITORING_TABS = [
+  { id: "cctv", label: "CCTV Monitoring", icon: Video },
+  { id: "employee", label: "Employee Monitoring", icon: DoorOpen },
+  { id: "stock", label: "Stock Monitoring", icon: Package },
+  { id: "guidance", label: "Product Guidance", icon: Search },
+];
 
 const SETTINGS = [
   {
@@ -46,10 +56,44 @@ const ICON_BG = {
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const [monitorTab, setMonitorTab] = useState("cctv");
+  const isAdmin = user?.role === "admin";
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Settings" subtitle="System configuration and preferences" />
+
+      {isAdmin && (
+        <div className="card p-6 flex flex-col gap-4">
+          <div>
+            <h3 className="font-semibold text-ink mb-1">Monitoring</h3>
+            <p className="text-sm text-muted">CCTV, employee tracking, stock, and product guidance in one place</p>
+          </div>
+
+          <div className="inline-flex flex-wrap rounded-xl bg-hairline/[0.05] p-1 gap-1 w-fit">
+            {MONITORING_TABS.map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setMonitorTab(t.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    monitorTab === t.id ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+                  }`}
+                >
+                  <Icon size={15} /> {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {monitorTab === "cctv" && <CctvTab />}
+          {monitorTab === "employee" && <EmployeeTab />}
+          {monitorTab === "stock" && <StockTab />}
+          {monitorTab === "guidance" && <GuidanceTab />}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 stagger">
         <div className="card card-hover p-6 flex gap-4">

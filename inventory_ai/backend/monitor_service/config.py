@@ -44,6 +44,11 @@ NODE_SERVICE_TOKEN: str = os.environ.get("MONITOR_NODE_SERVICE_TOKEN", "")
 PERSON_CONFIDENCE_THRESHOLD: float = float(os.environ.get("MONITOR_PERSON_CONFIDENCE", "0.5"))
 UNKNOWN_ALERT_SECONDS: float = float(os.environ.get("MONITOR_UNKNOWN_ALERT_SECONDS", "3.0"))
 SESSION_POLL_SECONDS: float = float(os.environ.get("MONITOR_SESSION_POLL_SECONDS", "1.0"))
+# Box-carry detection: how many consecutive frames a box must overlap a person
+# before they count as "carrying", and how long after that a room change still
+# counts as a box transfer.
+CARRY_MIN_FRAMES: int = int(os.environ.get("MONITOR_CARRY_MIN_FRAMES", "8"))
+CARRY_WINDOW_SECONDS: float = float(os.environ.get("MONITOR_CARRY_WINDOW_SECONDS", "30.0"))
 FRAME_SKIP: int = int(os.environ.get("MONITOR_FRAME_SKIP", "0"))
 HOST: str = os.environ.get("MONITOR_HOST", "0.0.0.0")
 PORT: int = int(os.environ.get("MONITOR_PORT", "5001"))

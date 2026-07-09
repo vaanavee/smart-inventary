@@ -10,7 +10,6 @@ import Workers from "./pages/Workers.jsx";
 import History from "./pages/History.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Settings from "./pages/Settings.jsx";
-import Monitoring from "./pages/Monitoring.jsx";
 import QrGenerator from "./pages/QrGenerator.jsx";
 import QrScanner from "./pages/QrScanner.jsx";
 import Login from "./pages/Login.jsx";
@@ -33,7 +32,7 @@ function AppLayout() {
             <Route path="/history" element={<History />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="/monitoring" element={<Navigate to="/settings" replace />} />
             <Route path="/qr-generator" element={<QrGenerator />} />
             <Route path="/qr-scanner" element={<QrScanner />} />
             <Route path="*" element={<Navigate to="/" replace />} />
