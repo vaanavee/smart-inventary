@@ -2,35 +2,57 @@
 #
 # Public (Traefik-routed via SERVICE_FQDN):
 #   dashboard  -> https://inventory.wisright.com — the React UI (nginx), reverse-proxies the 3 backends internally
-#   node       -> https://api.wisright.com — Node auth/RFID API, hit directly by on-prem ESP32 units over HTTPS
 # Internal only (expose, reached via the dashboard's nginx):
+#   node       -> Node auth/RFID API (:4000). ESP32 units reach it through the
+#                 dashboard's /monitor-api/* proxy, so it needs no public domain.
 #   api        -> FastAPI inventory API (:8000)
 #   monitor    -> Monitor-AI camera + RT-DETR (:5001)
+#   postgres   -> Postgres 16, backing store for the Node API
 #
-# This stack uses embedded SQLite (not MySQL), so persistence is named volumes.
 # SERVICE_FQDN_* / SERVICE_PASSWORD_* are Coolify magic variables (auto-generated).
 
 services:
-  # --- Node backend: auth, RFID, room entries, transfers, alerts (SQLite) ---
+  # --- Postgres: backing store for the Node API ---
+  postgres:
+    image: 'postgres:16-alpine'
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: '${POSTGRES_USER:-postgres}'
+      POSTGRES_PASSWORD: '${SERVICE_PASSWORD_POSTGRES}'
+      POSTGRES_DB: '${POSTGRES_DB:-smart_inventary}'
+    volumes:
+      - 'postgres-data:/var/lib/postgresql/data'
+    expose:
+      - '5432'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smart_inventary}'
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # --- Node backend: auth, RFID, room entries, transfers, alerts (Postgres) ---
   node:
     build:
       context: ./server
       dockerfile: Dockerfile
     restart: unless-stopped
-    # Publicly exposed (in addition to the dashboard's internal nginx proxy) so
-    # on-prem ESP32 units can reach it directly over the internet via HTTPS.
+    # Stays internal — the dashboard's nginx proxies /monitor-api/* to it, which
+    # is also how the on-prem ESP32 units reach it (see firmware/*.ino).
     environment:
-      SERVICE_FQDN_NODE_4000: 'https://api.wisright.com'
       PORT: 4000
-      DB_PATH: /data/data.db
+      DATABASE_URL: 'postgres://${POSTGRES_USER:-postgres}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-smart_inventary}'
       JWT_SECRET: '${SERVICE_PASSWORD_JWT}'
       ADMIN_USERNAME: '${ADMIN_USERNAME:-admin}'
       ADMIN_PASSWORD: '${ADMIN_PASSWORD:-admin123}'
       DEFAULT_EMPLOYEE_PASSWORD: '${DEFAULT_EMPLOYEE_PASSWORD:-employee123}'
       EXPIRY_ALERT_DAYS: '${EXPIRY_ALERT_DAYS:-180}'
       MONITOR_SERVICE_URL: 'http://monitor:5001'
-    volumes:
-      - 'node-data:/data'
+    depends_on:
+      postgres:
+        condition: service_healthy
     expose:
       - '4000'
     healthcheck:
@@ -87,9 +109,11 @@ services:
       MONITOR_CAMERA_URL: '${MONITOR_CAMERA_URL:-}'
       MONITOR_CAMERA_USER: '${MONITOR_CAMERA_USER:-admin}'
       MONITOR_CAMERA_PASSWORD: '${MONITOR_CAMERA_PASSWORD:-123456}'
+    # node_client authenticates lazily per request, so monitor need not wait for
+    # node to be healthy — waiting would stall the dashboard behind it.
     depends_on:
       node:
-        condition: service_healthy
+        condition: service_started
     expose:
       - '5001'
     command: ['python', '-m', 'backend.monitor_service.main']
@@ -112,13 +136,16 @@ services:
       SERVICE_FQDN_DASHBOARD_80: 'https://inventory.wisright.com'
     expose:
       - '80'
+    # service_started (not service_healthy): nginx only needs the upstream names
+    # to resolve at config load. Gating on health means one slow backend (monitor
+    # loads RT-DETR) keeps the UI down and Traefik reports "no available server".
     depends_on:
       node:
-        condition: service_healthy
+        condition: service_started
       api:
-        condition: service_healthy
+        condition: service_started
       monitor:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:80/ >/dev/null 2>&1 || exit 1']
       interval: 15s
@@ -127,5 +154,5 @@ services:
       start_period: 10s
 
 volumes:
-  node-data: null
+  postgres-data: null
   inv-data: null
