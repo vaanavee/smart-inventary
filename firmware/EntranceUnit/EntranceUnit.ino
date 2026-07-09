@@ -20,11 +20,17 @@ const char* WIFI_SSID     = "Wisright";
 const char* WIFI_PASSWORD = "26488668";
 
 // ---------------- Backend ----------------
-// Production Node API, publicly exposed over HTTPS via Coolify/Traefik (see
-// docker-compose.yml -> node service -> SERVICE_FQDN_NODE_4000). No port here:
-// Traefik terminates TLS on 443 and routes by hostname.
-const char* SERVER_HOST = "api.wisright.com";
-const char* ROOM_NAME   = "Room 1";
+// Routed through the dashboard's own nginx proxy (same host that already
+// works in a browser at https://inventory.wisright.com) rather than a
+// dedicated api.wisright.com subdomain - that domain has no DNS record yet,
+// which made every request fail with HTTP -1 (couldn't even resolve the
+// hostname). This path works today with zero extra DNS/Coolify setup:
+//   https://inventory.wisright.com/monitor-api/*  ->  node:4000/api/*
+// Switch SERVER_HOST/API_PREFIX back to "api.wisright.com" + "/api" once
+// that subdomain has a real DNS record and SERVICE_FQDN_NODE_4000 is live.
+const char* SERVER_HOST  = "inventory.wisright.com";
+const char* API_PREFIX   = "/monitor-api";
+const char* ROOM_NAME    = "Room 1";
 
 // ---------------- Web Server & Devices ----------------
 WebServer server(80);
@@ -94,7 +100,7 @@ String readUID() {
 }
 
 String backendUrl(const char* path) {
-  return "https://" + String(SERVER_HOST) + path;
+  return "https://" + String(SERVER_HOST) + String(API_PREFIX) + path;
 }
 
 int postJson(const String& url, const String& jsonBody, String& responseBody) {
@@ -118,7 +124,7 @@ void sendHeartbeat() {
   String ipStr = WiFi.localIP().toString();
   String body = "{\"deviceName\":\"Entrance Unit\",\"room\":\"" + String(ROOM_NAME) + "\",\"ip\":\"" + ipStr + "\"}";
   String response;
-  int code = postJson(backendUrl("/api/rfid/heartbeat"), body, response);
+  int code = postJson(backendUrl("/rfid/heartbeat"), body, response);
   if (code == 200) {
     Serial.println("Heartbeat OK -> IP: " + ipStr);
   } else {
@@ -237,7 +243,7 @@ void handleTap(const String& uid) {
 
   String checkinBody = "{\"rfidTag\":\"" + uid + "\",\"room\":\"" + String(ROOM_NAME) + "\"}";
   String response;
-  int code = postJson(backendUrl("/api/rfid/checkin"), checkinBody, response);
+  int code = postJson(backendUrl("/rfid/checkin"), checkinBody, response);
 
   if (code == 200) {
     Serial.println("LOGIN OK  -> " + response);
@@ -247,7 +253,7 @@ void handleTap(const String& uid) {
 
   if (code == 409) {
     String checkoutBody = "{\"rfidTag\":\"" + uid + "\"}";
-    code = postJson(backendUrl("/api/rfid/checkout"), checkoutBody, response);
+    code = postJson(backendUrl("/rfid/checkout"), checkoutBody, response);
     if (code == 200) {
       Serial.println("LOGOUT OK -> " + response);
       addScanLog(uid, "Check-out", "Success");
