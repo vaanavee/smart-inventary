@@ -250,45 +250,18 @@ export default function QrGenerator() {
                 <Badge tone={CATEGORY_TONE[product.category] || "neutral"}>{product.category}</Badge>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs text-muted">Move Quantity</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={moveQty}
-                    onChange={(e) => setMoveQty(e.target.value)}
-                    className="input-field"
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs text-muted">Source</span>
-                  <select value={src} onChange={(e) => setSrc(e.target.value)} className="input-field">
-                    {rackOptions.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs text-muted">Destination</span>
-                  <select value={dst} onChange={(e) => setDst(e.target.value)} className="input-field">
-                    <option value="">Select…</option>
-                    {rackOptions.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <label className="flex flex-col gap-1.5 max-w-[12rem]">
+                <span className="text-xs text-muted">Move Quantity</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={moveQty}
+                  onChange={(e) => setMoveQty(e.target.value)}
+                  className="input-field"
+                />
+              </label>
 
-              <div className="flex items-center gap-2 text-sm text-ink">
-                <span className="font-medium">{product.name} × {moveQty || 0}</span>
-                <span className="text-muted">·</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Badge tone="info">{src || "—"}</Badge>
-                  <ArrowRight size={16} className="text-primary" />
-                  <Badge tone="success">{dst || "—"}</Badge>
-                </span>
-              </div>
+              <p className="text-sm text-ink font-medium">{product.name} × {moveQty || 0}</p>
 
               <div className="flex flex-col sm:flex-row items-center gap-5 pt-1">
                 <div className="p-4 bg-white rounded-2xl shadow-soft shrink-0">
