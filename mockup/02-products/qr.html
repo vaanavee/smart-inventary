@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Codes · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .qr-cols { display:grid; grid-template-columns: 320px 1fr; gap:22px; align-items:start; }
+  .qr-panel { text-align:center; }
+  .qr-frame { background:#fff; border:1px solid var(--border); border-radius:14px; padding:22px; display:inline-block; box-shadow:var(--shadow-sm); }
+  .qr-frame svg { display:block; }
+  .qr-cap { margin-top:12px; font-weight:700; font-size:.95rem; }
+  .qr-cap .mono { color:var(--text-3); font-weight:500; display:block; font-size:.8rem; margin-top:2px; }
+  .kv { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--text-3); }
+  .kv .v { font-weight:600; }
+  .payload { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-size:.78rem; font-family:ui-monospace,Menlo,monospace; color:var(--text-2); white-space:pre-wrap; word-break:break-all; }
+  @media (max-width:840px){ .qr-cols { grid-template-columns:1fr; } }
+</style>
+</head>
+<body data-module="products" data-page="QR Codes">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Inventory<span class="sep">/</span><a href="list.html">Products</a><span class="sep">/</span>QR Codes</div>
+<div class="page-header">
+  <div><h1>QR Code Generator</h1><div class="subtitle">Self-contained product QR · scanning needs no server lookup · PRD-0412</div></div>
+  <div class="flex">
+    <select class="select" style="width:auto"><option>Bosch GSB 12V Drill · PRD-0412</option><option>M8 Hex Bolts · PRD-0188</option><option>Copper Wire Spool · PRD-0207</option></select>
+    <button class="btn btn-primary" data-action="export">⬇ Download PNG</button>
+    <button class="btn" data-action="print">🖨 Print label</button>
+  </div>
+</div>
+
+<div class="card"><div class="card-body">
+  <div class="qr-cols">
+    <div class="qr-panel">
+      <div class="qr-frame">
+        <svg width="216" height="216" viewBox="0 0 25 25" shape-rendering="crispEdges" role="img" aria-label="QR code for PRD-0412">
+          <rect width="25" height="25" fill="#fff"/>
+          <g fill="#0f172a">
+            <!-- finder: top-left -->
+            <path d="M0 0h7v7h-7z M1 1v5h5v-5z" fill-rule="evenodd"/><rect x="2" y="2" width="3" height="3"/>
+            <!-- finder: top-right -->
+            <path d="M18 0h7v7h-7z M19 1v5h5v-5z" fill-rule="evenodd"/><rect x="20" y="2" width="3" height="3"/>
+            <!-- finder: bottom-left -->
+            <path d="M0 18h7v7h-7z M1 19v5h5v-5z" fill-rule="evenodd"/><rect x="2" y="20" width="3" height="3"/>
+            <!-- timing + data modules (decorative, reads as a QR) -->
+            <rect x="8" y="0" width="1" height="1"/><rect x="10" y="0" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="15" y="0" width="1" height="1"/>
+            <rect x="9" y="1" width="1" height="1"/><rect x="12" y="1" width="1" height="1"/><rect x="16" y="1" width="1" height="1"/>
+            <rect x="8" y="2" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="14" y="2" width="1" height="1"/><rect x="15" y="2" width="1" height="1"/>
+            <rect x="10" y="3" width="1" height="1"/><rect x="13" y="3" width="1" height="1"/><rect x="16" y="3" width="1" height="1"/>
+            <rect x="8" y="4" width="1" height="1"/><rect x="9" y="4" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/>
+            <rect x="11" y="5" width="1" height="1"/><rect x="13" y="5" width="1" height="1"/><rect x="15" y="5" width="1" height="1"/><rect x="16" y="5" width="1" height="1"/>
+            <rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/>
+            <!-- timing row/col -->
+            <rect x="0" y="8" width="1" height="1"/><rect x="2" y="8" width="1" height="1"/><rect x="4" y="8" width="1" height="1"/><rect x="6" y="8" width="1" height="1"/>
+            <rect x="8" y="8" width="1" height="1"/><rect x="10" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="16" y="8" width="1" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="1" height="1"/><rect x="22" y="8" width="1" height="1"/><rect x="24" y="8" width="1" height="1"/>
+            <!-- data blob -->
+            <rect x="9" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="17" y="9" width="1" height="1"/><rect x="19" y="9" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="24" y="9" width="1" height="1"/>
+            <rect x="8" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="13" y="10" width="1" height="1"/><rect x="15" y="10" width="1" height="1"/><rect x="18" y="10" width="1" height="1"/><rect x="21" y="10" width="1" height="1"/><rect x="23" y="10" width="1" height="1"/>
+            <rect x="9" y="11" width="1" height="1"/><rect x="12" y="11" width="1" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="17" y="11" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="24" y="11" width="1" height="1"/>
+            <rect x="0" y="12" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/><rect x="11" y="12" width="1" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="14" y="12" width="1" height="1"/><rect x="19" y="12" width="1" height="1"/><rect x="22" y="12" width="1" height="1"/>
+            <rect x="10" y="13" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="18" y="13" width="1" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="23" y="13" width="1" height="1"/>
+            <rect x="9" y="14" width="1" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="14" y="14" width="1" height="1"/><rect x="16" y="14" width="1" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="22" y="14" width="1" height="1"/><rect x="24" y="14" width="1" height="1"/>
+            <rect x="8" y="15" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="13" y="15" width="1" height="1"/><rect x="17" y="15" width="1" height="1"/><rect x="19" y="15" width="1" height="1"/><rect x="23" y="15" width="1" height="1"/>
+            <rect x="9" y="16" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="18" y="16" width="1" height="1"/><rect x="21" y="16" width="1" height="1"/><rect x="24" y="16" width="1" height="1"/>
+            <!-- lower-right quadrant -->
+            <rect x="8" y="18" width="1" height="1"/><rect x="10" y="18" width="1" height="1"/><rect x="13" y="18" width="1" height="1"/><rect x="16" y="18" width="1" height="1"/><rect x="19" y="18" width="1" height="1"/><rect x="22" y="18" width="1" height="1"/><rect x="24" y="18" width="1" height="1"/>
+            <rect x="9" y="19" width="1" height="1"/><rect x="12" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="18" y="19" width="1" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="23" y="19" width="1" height="1"/>
+            <rect x="8" y="20" width="1" height="1"/><rect x="11" y="20" width="1" height="1"/><rect x="14" y="20" width="1" height="1"/><rect x="17" y="20" width="1" height="1"/><rect x="21" y="20" width="1" height="1"/><rect x="24" y="20" width="1" height="1"/>
+            <rect x="9" y="21" width="1" height="1"/><rect x="10" y="21" width="1" height="1"/><rect x="13" y="21" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="19" y="21" width="1" height="1"/><rect x="22" y="21" width="1" height="1"/>
+            <rect x="8" y="22" width="1" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="15" y="22" width="1" height="1"/><rect x="18" y="22" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="23" y="22" width="1" height="1"/>
+            <rect x="10" y="23" width="1" height="1"/><rect x="14" y="23" width="1" height="1"/><rect x="17" y="23" width="1" height="1"/><rect x="21" y="23" width="1" height="1"/><rect x="24" y="23" width="1" height="1"/>
+            <rect x="9" y="24" width="1" height="1"/><rect x="11" y="24" width="1" height="1"/><rect x="13" y="24" width="1" height="1"/><rect x="16" y="24" width="1" height="1"/><rect x="19" y="24" width="1" height="1"/><rect x="22" y="24" width="1" height="1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="qr-cap">Bosch GSB 12V Cordless Drill<span class="mono">PRD-0412</span></div>
+    </div>
+
+    <div>
+      <h3 class="mb-3">Encoded in this QR</h3>
+      <div class="kv"><span class="k">Product</span><span class="v">Bosch GSB 12V Cordless Drill</span></div>
+      <div class="kv"><span class="k">SKU</span><span class="v mono">PRD-0412</span></div>
+      <div class="kv"><span class="k">Category</span><span class="v">Power Tools</span></div>
+      <div class="kv"><span class="k">Home location</span><span class="v">Room 2 · Rack A</span></div>
+      <div class="kv"><span class="k">Unit</span><span class="v">pcs</span></div>
+      <div class="kv"><span class="k">Low-stock min</span><span class="v">50</span></div>
+
+      <div class="alert alert-info mt-3 mb-3">ℹ️ <div>The QR payload is <strong>self-contained JSON</strong> — a worker's scanner reads the product identity directly, no backend call needed. Scan it in the <a href="../06-scanner/scan.html">QR Scanner</a>.</div></div>
+
+      <h4 class="mb-2">Payload preview</h4>
+      <div class="payload">{"t":"wisright-product","v":1,"sku":"PRD-0412",
+ "name":"Bosch GSB 12V Cordless Drill",
+ "cat":"Power Tools","room":"Room 2","rack":"A","unit":"pcs"}</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

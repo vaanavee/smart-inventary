@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<style>
+  .login-wrap { min-height:100vh; display:grid; grid-template-columns: 1.1fr 1fr; }
+  .login-brandside {
+    background: linear-gradient(150deg, #4338ca 0%, #4f46e5 45%, #7c3aed 100%);
+    color:#fff; padding: 56px 60px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .login-brandside .logo { width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,.16); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem; margin-bottom:26px; }
+  .login-brandside h1 { color:#fff; font-size:2rem; line-height:1.15; letter-spacing:-.02em; }
+  .login-brandside p { color:rgba(255,255,255,.82); margin-top:14px; max-width:400px; font-size:.95rem; }
+  .login-points { margin-top:30px; display:flex; flex-direction:column; gap:12px; }
+  .login-points div { display:flex; align-items:center; gap:10px; font-size:.9rem; color:rgba(255,255,255,.9); }
+  .login-points .pi { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,.16); display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+  .login-formside { display:flex; align-items:center; justify-content:center; padding: 40px; }
+  .login-card { width:100%; max-width:380px; }
+  .login-card h2 { font-family:var(--font-display); font-size:1.4rem; }
+  .login-card .sub { color:var(--text-3); font-size:.86rem; margin-top:4px; margin-bottom:22px; }
+  .login-card .tabs { margin-bottom: 20px; }
+  .login-card .tab { flex: 1; justify-content: center; }
+  .login-foot { margin-top:22px; text-align:center; font-size:.78rem; color:var(--text-3); }
+  @media (max-width: 820px) { .login-wrap { grid-template-columns: 1fr; } .login-brandside { display:none; } }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-brandside">
+    <div class="logo">WR</div>
+    <h1>WisRight Inventory</h1>
+    <p>QR + RFID movement tracking with CCTV cross-check. Know exactly what moved, where it went, and who really took it.</p>
+    <div class="login-points">
+      <div><span class="pi">📦</span> Scan a QR to record IN / OUT / Transfer</div>
+      <div><span class="pi">🪪</span> RFID door taps identify who entered</div>
+      <div><span class="pi">🎥</span> CCTV catches anyone who didn't tap</div>
+    </div>
+  </div>
+
+  <div class="login-formside">
+    <div class="login-card">
+      <h2>Sign in</h2>
+      <div class="sub">Welcome back. Choose your role to continue.</div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="admin">Admin / Supervisor</button>
+        <button class="tab" data-tab="employee">Employee</button>
+      </div>
+
+      <div class="tab-panel active" id="admin">
+        <div class="form-group"><label class="required">Username</label><input class="input" value="karthik.rajan"></div>
+        <div class="form-group"><label class="required">Password</label><input class="input" type="password" value="demo1234"></div>
+        <label class="checkbox-row mb-3"><input type="checkbox" checked> Keep me signed in</label>
+        <a class="btn btn-primary btn-lg" href="01-dashboard/dashboard.html" style="width:100%; justify-content:center;">Sign in as Supervisor →</a>
+      </div>
+
+      <div class="tab-panel" id="employee">
+        <div class="form-group"><label class="required">Employee ID</label><input class="input" value="EMP-101" placeholder="e.g. EMP-101"></div>
+        <div class="form-group"><label class="required">Password</label><input class="input" type="password" value="demo1234"></div>
+        <div class="alert alert-info mb-3">ℹ️ <div>Employees land on the QR Scanner &amp; Product Search. Movement history stays read-only.</div></div>
+        <a class="btn btn-primary btn-lg" href="06-scanner/scan.html" style="width:100%; justify-content:center;">Sign in as Employee →</a>
+      </div>
+
+      <div class="login-foot">
+        Demo credentials are pre-filled · <a href="index.html">Back to module index</a><br>
+        Static mockup, no real data · Not a real application.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/ui.js"></script>
+</body></html>

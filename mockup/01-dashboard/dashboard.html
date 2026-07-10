@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .match-cell { display:flex; gap:4px; flex-wrap:wrap; }
+  .mb { font-size:.68rem; font-weight:700; padding:1px 7px; border-radius:999px; border:1px solid; }
+  .mb.ok { background:var(--success-bg); color:var(--success); border-color:var(--success-border); }
+  .mb.no { background:var(--danger-bg); color:var(--danger); border-color:var(--danger-border); }
+  .mb.warn { background:var(--warning-bg); color:var(--warning); border-color:var(--warning-border); }
+  .dash-cols { display:grid; grid-template-columns: 1.7fr 1fr; gap:18px; align-items:start; }
+  .mini-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+  .mini-row:last-child { border-bottom:none; }
+  .mini-row .nm { font-weight:600; font-size:.86rem; }
+  .mini-row .mt { font-size:.76rem; color:var(--text-3); }
+  .room-strip .stat .v { color: var(--primary); }
+  @media (max-width: 1040px){ .dash-cols { grid-template-columns:1fr; } }
+</style>
+</head>
+<body data-module="dashboard" data-page="Dashboard">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Overview<span class="sep">/</span>Dashboard</div>
+<div class="page-header">
+  <div><h1>Dashboard</h1><div class="subtitle">Live warehouse overview · WisRight · Fri 10 Jul 2026, 09:52 IST</div></div>
+  <div class="flex">
+    <button class="btn" data-action="refresh">↻ Refresh</button>
+    <button class="btn btn-primary" data-action="export">⬇ Export snapshot</button>
+  </div>
+</div>
+
+<!-- KPI row -->
+<div class="grid-4 mb-4">
+  <div class="kpi"><div class="kpi-label">Total Products</div><div class="kpi-value">248</div><div class="kpi-delta up">▲ 3 added this week</div></div>
+  <div class="kpi"><div class="kpi-label">Employees</div><div class="kpi-value">5 <span style="font-size:.9rem;color:var(--text-3);font-weight:500">active</span></div><div class="kpi-delta">of 6 registered</div></div>
+  <div class="kpi"><div class="kpi-label">Movements Today</div><div class="kpi-value">37</div><div class="kpi-delta">22 OUT · 9 IN · 6 Transfer</div></div>
+  <div class="kpi"><div class="kpi-label">Low-Stock (&lt;50)</div><div class="kpi-value text-warning">6</div><div class="kpi-delta down">▼ needs reorder</div></div>
+</div>
+
+<!-- Who's in the rooms now -->
+<div class="stat-strip room-strip mb-4">
+  <div class="stat"><div class="v">Room 1</div><div class="l">Vishali Nair · in since 09:12</div></div>
+  <div class="stat"><div class="v">Room 2</div><div class="l">Arjun Das · in since 09:41</div></div>
+  <div class="stat"><div class="v" style="color:var(--text-3)">Room 3</div><div class="l">Empty · reader offline</div></div>
+  <div class="stat"><div class="v text-danger">1</div><div class="l">Unknown-person alert (open)</div></div>
+</div>
+
+<div class="dash-cols">
+  <!-- Recent employee tracking -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Recent Employee Tracking</h2>
+      <span class="badge badge-neutral">Cross-checked · RFID · QR · CCTV</span>
+    </div>
+    <div class="card-body flush">
+      <table class="table">
+        <thead><tr><th>Employee</th><th>Product</th><th>Move</th><th>From → To</th><th>Time</th><th>Match</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Vishali Nair</td>
+            <td>Bosch GSB 12V Drill <span class="mono muted">PRD-0412</span></td>
+            <td><span class="badge badge-danger">OUT ×3</span></td>
+            <td class="text-2">Room 2 · A → Dispatch</td>
+            <td class="mono">09:14</td>
+            <td><div class="match-cell"><span class="mb ok">RFID ✓</span><span class="mb ok">QR ✓</span><span class="mb ok">CCTV ✓</span></div></td>
+          </tr>
+          <tr>
+            <td>Arjun Das</td>
+            <td>Makita Angle Grinder <span class="mono muted">PRD-0355</span></td>
+            <td><span class="badge badge-info">Transfer ×2</span></td>
+            <td class="text-2">Room 2 · B → Room 1 · D</td>
+            <td class="mono">09:41</td>
+            <td><div class="match-cell"><span class="mb ok">RFID ✓</span><span class="mb ok">QR ✓</span><span class="mb ok">CCTV ✓</span></div></td>
+          </tr>
+          <tr class="row-danger">
+            <td>— unresolved —</td>
+            <td>2.5mm² Copper Wire <span class="mono muted">PRD-0207</span></td>
+            <td><span class="badge badge-danger">OUT ×5</span></td>
+            <td class="text-2">Room 3 · C → Dispatch</td>
+            <td class="mono">09:47</td>
+            <td><div class="match-cell"><span class="mb no">RFID ✗</span><span class="mb ok">QR ✓</span><span class="mb warn">CCTV ⚠</span></div></td>
+          </tr>
+          <tr>
+            <td>Vishal Kumar</td>
+            <td>M8 Hex Bolts (Box) <span class="mono muted">PRD-0188</span></td>
+            <td><span class="badge badge-success">IN ×20</span></td>
+            <td class="text-2">Inbound → Room 1 · B</td>
+            <td class="mono">09:05</td>
+            <td><div class="match-cell"><span class="mb ok">RFID ✓</span><span class="mb ok">QR ✓</span><span class="mb ok">CCTV ✓</span></div></td>
+          </tr>
+          <tr>
+            <td>Vaanavee R.</td>
+            <td>LED Panel 18W <span class="mono muted">PRD-0533</span></td>
+            <td><span class="badge badge-danger">OUT ×6</span></td>
+            <td class="text-2">Room 3 · D → Dispatch</td>
+            <td class="mono">08:58</td>
+            <td><div class="match-cell"><span class="mb ok">RFID ✓</span><span class="mb ok">QR ✓</span><span class="mb no">CCTV ✗</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination"><span>Showing 5 of 37 today</span>
+        <button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">›</button></div>
+    </div>
+  </div>
+
+  <!-- Right column: alerts -->
+  <div>
+    <div class="card mb-3">
+      <div class="card-header"><h2>Low-Stock Alerts</h2><span class="badge badge-warning">&lt; 50 units</span></div>
+      <div class="card-body">
+        <div class="mini-row"><div><div class="nm">Cordless Impact Driver</div><div class="mt">PRD-0560 · Room 2 · C</div></div><span class="badge badge-danger">9 left</span></div>
+        <div class="mini-row"><div><div class="nm">Makita Angle Grinder</div><div class="mt">PRD-0355 · Room 2 · B</div></div><span class="badge badge-danger">18 left</span></div>
+        <div class="mini-row"><div><div class="nm">LED Panel 18W</div><div class="mt">PRD-0533 · Room 3 · D</div></div><span class="badge badge-warning">27 left</span></div>
+        <div class="mini-row"><div><div class="nm">Bosch GSB 12V Drill</div><div class="mt">PRD-0412 · Room 2 · A</div></div><span class="badge badge-warning">34 left</span></div>
+        <div class="mini-row"><div><div class="nm">2.5mm² Copper Wire</div><div class="mt">PRD-0207 · Room 3 · C</div></div><span class="badge badge-warning">42 left</span></div>
+        <a href="../04-search/search.html" class="btn btn-sm btn-ghost mt-2">View all 6 →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Unknown-Person Alert</h2><span class="badge badge-danger">● Open</span></div>
+      <div class="card-body">
+        <div class="alert alert-danger mb-3">🎥 <div>CCTV detected a person in <strong>Room 2</strong> at <strong>09:47</strong> with no matching RFID tap. A QR movement (PRD-0207) was recorded in the same window.</div></div>
+        <div class="flex">
+          <a href="../07-cctv/monitoring.html" class="btn btn-sm">View camera</a>
+          <a href="../08-attendance/match.html" class="btn btn-sm btn-primary">Reconcile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- High material-out -->
+<div class="card mt-4">
+  <div class="card-header"><h2>High Material-Out Products (Today)</h2><span class="badge badge-neutral">Top movers out</span></div>
+  <div class="card-body">
+    <div class="grid-2" style="align-items:end; gap:32px;">
+      <div class="bars">
+        <div class="bar-col"><div class="bar-v" style="height:96%"></div><div class="bar-l">Copper</div></div>
+        <div class="bar-col"><div class="bar-v" style="height:78%"></div><div class="bar-l">LED</div></div>
+        <div class="bar-col"><div class="bar-v alt" style="height:60%"></div><div class="bar-l">Drill</div></div>
+        <div class="bar-col"><div class="bar-v alt" style="height:44%"></div><div class="bar-l">Grinder</div></div>
+        <div class="bar-col"><div class="bar-v alt" style="height:30%"></div><div class="bar-l">Bolts</div></div>
+      </div>
+      <div>
+        <div class="mini-row"><div class="nm">2.5mm² Copper Wire <span class="mono muted">PRD-0207</span></div><span class="badge badge-danger">86 out</span></div>
+        <div class="mini-row"><div class="nm">LED Panel 18W <span class="mono muted">PRD-0533</span></div><span class="badge badge-danger">70 out</span></div>
+        <div class="mini-row"><div class="nm">Bosch GSB 12V Drill <span class="mono muted">PRD-0412</span></div><span class="badge badge-warning">54 out</span></div>
+        <div class="mini-row"><div class="nm">Makita Grinder <span class="mono muted">PRD-0355</span></div><span class="badge badge-warning">39 out</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

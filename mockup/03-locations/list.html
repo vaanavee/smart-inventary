@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locations · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .room-card { margin-bottom:16px; }
+  .room-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .room-title { font-family:var(--font-display); font-weight:700; font-size:1.05rem; }
+  .room-meta { font-size:.82rem; color:var(--text-3); margin-top:2px; }
+  .device-box { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:8px 14px; }
+  .device-box .di { font-size:1.1rem; }
+  .device-box .dn { font-weight:700; font-family:ui-monospace,monospace; font-size:.85rem; }
+  .device-box .ds { font-size:.72rem; color:var(--text-3); }
+  .rack-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .rack { display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:.85rem; }
+  .rack .rk { font-weight:700; width:22px; height:22px; border-radius:6px; background:var(--primary-50); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+  .rack .rc { color:var(--text-3); font-size:.76rem; }
+  .rack-add { border-style:dashed; color:var(--text-3); cursor:pointer; }
+</style>
+</head>
+<body data-module="locations" data-page="Locations">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Inventory<span class="sep">/</span>Locations</div>
+<div class="page-header">
+  <div><h1>Locations</h1><div class="subtitle">Room → Rack hierarchy · each room mapped to its ESP32 RFID door reader</div></div>
+  <div class="flex">
+    <button class="btn" data-modal-open="rackModal">+ Add Rack</button>
+    <button class="btn btn-primary" data-modal-open="roomModal">+ Add Room</button>
+  </div>
+</div>
+
+<div class="stat-strip mb-4">
+  <div class="stat"><div class="v">3</div><div class="l">Rooms</div></div>
+  <div class="stat"><div class="v">12</div><div class="l">Racks</div></div>
+  <div class="stat"><div class="v text-success">2</div><div class="l">Readers online</div></div>
+  <div class="stat"><div class="v text-danger">1</div><div class="l">Reader offline</div></div>
+</div>
+
+<!-- Room 1 -->
+<div class="card room-card"><div class="card-body">
+  <div class="room-top">
+    <div>
+      <div class="room-title">Room 1 · Fasteners &amp; Hardware</div>
+      <div class="room-meta">5 racks · 62 products stored</div>
+    </div>
+    <div class="flex flex-center">
+      <div class="device-box"><span class="di">🪪</span><div><div class="dn">ESP-D01</div><div class="ds">Door reader</div></div><span class="badge badge-success">● Online</span></div>
+      <button class="btn btn-sm" data-action="edit">Edit</button>
+    </div>
+  </div>
+  <div class="rack-row">
+    <div class="rack"><span class="rk">A</span> Washers <span class="rc">1,180</span></div>
+    <div class="rack"><span class="rk">B</span> Hex Bolts <span class="rc">240</span></div>
+    <div class="rack"><span class="rk">C</span> Nuts <span class="rc">430</span></div>
+    <div class="rack"><span class="rk">D</span> Anchors <span class="rc">96</span></div>
+    <div class="rack"><span class="rk">E</span> Rivets <span class="rc">310</span></div>
+    <div class="rack rack-add" data-modal-open="rackModal">＋ Rack</div>
+  </div>
+</div></div>
+
+<!-- Room 2 -->
+<div class="card room-card"><div class="card-body">
+  <div class="room-top">
+    <div>
+      <div class="room-title">Room 2 · Power Tools</div>
+      <div class="room-meta">3 racks · 48 products stored</div>
+    </div>
+    <div class="flex flex-center">
+      <div class="device-box"><span class="di">🪪</span><div><div class="dn">ESP-D02</div><div class="ds">Door reader</div></div><span class="badge badge-success">● Online</span></div>
+      <button class="btn btn-sm" data-action="edit">Edit</button>
+    </div>
+  </div>
+  <div class="rack-row">
+    <div class="rack"><span class="rk">A</span> Drills <span class="rc">34</span></div>
+    <div class="rack"><span class="rk">B</span> Grinders <span class="rc">18</span></div>
+    <div class="rack"><span class="rk">C</span> Drivers <span class="rc">9</span></div>
+    <div class="rack rack-add" data-modal-open="rackModal">＋ Rack</div>
+  </div>
+</div></div>
+
+<!-- Room 3 -->
+<div class="card room-card"><div class="card-body">
+  <div class="room-top">
+    <div>
+      <div class="room-title">Room 3 · Electricals</div>
+      <div class="room-meta">4 racks · 71 products stored</div>
+    </div>
+    <div class="flex flex-center">
+      <div class="device-box"><span class="di">🪪</span><div><div class="dn">ESP-D03</div><div class="ds">Door reader</div></div><span class="badge badge-danger">● Offline 12m</span></div>
+      <button class="btn btn-sm" data-action="edit">Edit</button>
+    </div>
+  </div>
+  <div class="alert alert-warning mt-3">⚠️ <div>Reader <strong>ESP-D03</strong> has not sent a heartbeat in 12 minutes. RFID entries for Room 3 may be missing — CCTV fallback is active for this room.</div></div>
+  <div class="rack-row">
+    <div class="rack"><span class="rk">A</span> Conduit <span class="rc">610</span></div>
+    <div class="rack"><span class="rk">B</span> Switches <span class="rc">205</span></div>
+    <div class="rack"><span class="rk">C</span> Copper Wire <span class="rc">42</span></div>
+    <div class="rack"><span class="rk">D</span> LED Panels <span class="rc">27</span></div>
+    <div class="rack rack-add" data-modal-open="rackModal">＋ Rack</div>
+  </div>
+</div></div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<!-- Add room modal -->
+<div class="modal-overlay" id="roomModal"><div class="modal">
+  <div class="modal-header"><h3>Add Room</h3><button class="modal-close" data-modal-close>✕</button></div>
+  <div class="modal-body">
+    <div class="alert alert-info mb-3">ℹ️ <div>Mockup form — nothing is saved. Map the room to the RFID reader mounted on its door.</div></div>
+    <div class="form-group"><label class="required">Room Name</label><input class="input" placeholder="e.g. Room 4 · Packaging"></div>
+    <div class="form-group"><label>Purpose / Category</label><input class="input" placeholder="e.g. Packaging materials"></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">RFID Device Number</label><input class="input" placeholder="ESP-D04"></div>
+      <div class="form-group"><label>Reader Status</label><select class="select"><option>Auto-detect on heartbeat</option><option>Online</option><option>Offline</option></select></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" data-modal-close>Cancel</button><button class="btn btn-primary" data-modal-close>Save Room</button></div>
+</div></div>
+
+<!-- Add rack modal -->
+<div class="modal-overlay" id="rackModal"><div class="modal">
+  <div class="modal-header"><h3>Add Rack</h3><button class="modal-close" data-modal-close>✕</button></div>
+  <div class="modal-body">
+    <div class="alert alert-info mb-3">ℹ️ <div>Mockup form — nothing is saved.</div></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">Room</label><select class="select"><option>Room 1 · Fasteners</option><option>Room 2 · Power Tools</option><option>Room 3 · Electricals</option></select></div>
+      <div class="form-group"><label class="required">Rack Label</label><input class="input" placeholder="F"></div>
+    </div>
+    <div class="form-group"><label>Stored Category</label><input class="input" placeholder="e.g. Cable ties"></div>
+  </div>
+  <div class="modal-footer"><button class="btn" data-modal-close>Cancel</button><button class="btn btn-primary" data-modal-close>Save Rack</button></div>
+</div></div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

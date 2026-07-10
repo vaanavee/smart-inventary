@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Update Movement · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .wizard { display:flex; gap:8px; margin-bottom:22px; }
+  .wstep { display:flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--border); border-radius:999px; font-size:.82rem; color:var(--text-3); background:var(--surface); }
+  .wstep .num { width:20px; height:20px; border-radius:50%; background:var(--border); color:var(--text-2); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; }
+  .wstep.active { border-color:var(--primary); color:var(--primary); font-weight:600; }
+  .wstep.active .num { background:var(--primary); color:#fff; }
+  .wstep.done { border-color:var(--success-border); color:var(--success); }
+  .wstep.done .num { background:var(--success); color:#fff; }
+  .prefill { display:flex; gap:16px; align-items:center; background:var(--primary-50); border:1px solid var(--primary-100); border-radius:12px; padding:16px 18px; }
+  .prefill .pic { width:52px; height:52px; border-radius:12px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
+  .prefill h3 { font-size:1.05rem; }
+  .action-seg { display:flex; gap:10px; }
+  .aopt { flex:1; border:1.5px solid var(--border); border-radius:12px; padding:14px; text-align:center; cursor:pointer; background:var(--surface); }
+  .aopt .ic { font-size:1.3rem; }
+  .aopt .t { font-weight:700; margin-top:4px; font-size:.9rem; }
+  .aopt .d { font-size:.74rem; color:var(--text-3); }
+  .aopt.active { border-color:var(--primary); background:var(--primary-50); }
+  .aopt.active .t { color:var(--primary); }
+</style>
+</head>
+<body data-module="scanner" data-page="Update Movement">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Operations<span class="sep">/</span><a href="scan.html">QR Scanner</a><span class="sep">/</span>Update Movement</div>
+<div class="page-header">
+  <div><h1>Update Movement</h1><div class="subtitle">Details pre-filled from the scanned QR · confirm the movement</div></div>
+</div>
+
+<div class="wizard">
+  <div class="wstep done"><span class="num">✓</span> Scan</div>
+  <div class="wstep active"><span class="num">2</span> Update Movement</div>
+  <div class="wstep"><span class="num">3</span> Confirm</div>
+</div>
+
+<div class="card"><div class="card-body">
+  <!-- Pre-filled product -->
+  <div class="prefill mb-4">
+    <div class="pic">🔩</div>
+    <div class="flex-1">
+      <h3>Bosch GSB 12V Cordless Drill</h3>
+      <div class="text-2 mono">PRD-0412 · Power Tools · currently 34 pcs at Room 2 · Rack A</div>
+    </div>
+    <span class="badge badge-success">✓ Scanned</span>
+  </div>
+
+  <!-- Action selector -->
+  <div class="form-group">
+    <label class="required">Movement type</label>
+    <div class="action-seg">
+      <div class="aopt"><div class="ic">📥</div><div class="t">Material IN</div><div class="d">Add stock</div></div>
+      <div class="aopt active"><div class="ic">📤</div><div class="t">Material OUT</div><div class="d">Remove stock</div></div>
+      <div class="aopt"><div class="ic">🔁</div><div class="t">Transfer</div><div class="d">Move location</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mt-3">
+    <div class="form-group"><label class="required">Quantity</label><input class="input" type="number" value="3"><div class="field-hint">Available: 34 pcs</div></div>
+    <div class="form-group"><label>Recorded by</label><input class="input" value="Vishali Nair · EMP-101" disabled></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="form-group"><label class="required">From location</label><select class="select"><option>Room 2 · Rack A (current)</option><option>Room 1 · Rack A</option><option>Room 3 · Rack C</option></select></div>
+    <div class="form-group"><label class="required">To location</label><select class="select"><option>Dispatch / Out</option><option>Room 1 · Rack D</option><option>Room 3 · Rack A</option></select></div>
+  </div>
+
+  <div class="form-group"><label>Notes (optional)</label><textarea class="textarea" placeholder="e.g. picked for Order #SO-8841"></textarea></div>
+
+  <div class="alert alert-info">ℹ️ <div>On save, this movement is cross-checked against the <strong>RFID door entry</strong> and <strong>CCTV sighting</strong> for Room 2, then logged with a match status.</div></div>
+</div>
+<div class="card-footer">
+  <a class="btn" href="scan.html">← Back to scan</a>
+  <a class="btn btn-primary btn-lg" href="confirmation.html">Save movement →</a>
+</div></div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>
