@@ -21,7 +21,7 @@ services:
   - type: web
     name: smart-inventary-client
     runtime: static
-    rootDir: client
+    rootDir: inventory_ai/dashboard
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:

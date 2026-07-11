@@ -137,8 +137,8 @@ services:
     restart: unless-stopped
     environment:
       SERVICE_FQDN_DASHBOARD_80: 'https://inventory.wisright.com'
-    expose:
-      - '80'
+    ports:
+      - '5174:80'
     # service_started (not service_healthy): nginx only needs the upstream names
     # to resolve at config load. Gating on health means one slow backend (monitor
     # loads RT-DETR) keeps the UI down and Traefik reports "no available server".
