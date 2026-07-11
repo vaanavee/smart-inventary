@@ -1,6 +1,13 @@
 const BASE_URL = "/api";
 
+function isMockPath() {
+  return window.location.pathname.startsWith("/mock");
+}
+
 async function request(path, options = {}) {
+  if (isMockPath()) {
+    throw new Error("Mock database fallback enabled");
+  }
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,

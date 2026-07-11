@@ -436,7 +436,7 @@ export default function Analytics() {
       </div>
 
       <div className="text-slate-400 mt-2 text-center text-[11px]">
-        Static mockup fallback loaded when database connection is inactive · Not a real application.
+        Designed & Developed by Vishali, Suraj and Vaanavee as part of the WisRight Innovation Internship Program (WR-IIP) held during June-July 2026
       </div>
     </div>
   );

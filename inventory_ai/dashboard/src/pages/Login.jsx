@@ -24,7 +24,8 @@ export default function Login() {
       } else {
         await loginEmployee(identifier, password);
       }
-      navigate("/");
+      const isMock = window.location.pathname.startsWith("/mock");
+      navigate(isMock ? "/mock" : "/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,7 +34,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-surface bg-gradient-radial-soft flex items-center justify-center p-6">
+    <div className="min-h-screen bg-surface bg-gradient-radial-soft flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md flex flex-col gap-6 animate-slideUp">
         <div className="flex justify-center">
           <Logo />
@@ -113,6 +114,9 @@ export default function Login() {
           </form>
         </div>
       </div>
+      <footer className="mt-8 text-center text-xs text-muted max-w-md">
+        Designed & Developed by Vishali, Suraj and Vaanavee as part of the WisRight Innovation Internship Program (WR-IIP) held during June-July 2026
+      </footer>
     </div>
   );
 }

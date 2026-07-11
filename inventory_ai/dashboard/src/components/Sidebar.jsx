@@ -65,9 +65,12 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const isMock = window.location.pathname.startsWith("/mock");
+  const prefix = isMock ? "/mock" : "";
+
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(isMock ? "/mock/login" : "/login");
   };
 
   const displayName = user?.name || user?.empId || "User";
@@ -101,10 +104,11 @@ export default function Sidebar() {
               )}
               {visibleLinks.map((link) => {
                 const Icon = link.icon;
+                const destination = link.to === "/" ? (isMock ? "/mock" : "/") : `${prefix}${link.to}`;
                 return (
                   <NavLink
                     key={link.to}
-                    to={link.to}
+                    to={destination}
                     end={link.to === "/"}
                     title={collapsed ? link.label : undefined}
                     className={({ isActive }) =>
