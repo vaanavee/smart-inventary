@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee 360 · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .profile-head { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  .profile-head .meta { font-size:.86rem; color:var(--text-2); }
+  .kv { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--text-3); }
+  .mb { font-size:.68rem; font-weight:700; padding:1px 7px; border-radius:999px; border:1px solid; }
+  .mb.ok { background:var(--success-bg); color:var(--success); border-color:var(--success-border); }
+  .mb.no { background:var(--danger-bg); color:var(--danger); border-color:var(--danger-border); }
+</style>
+</head>
+<body data-module="employees" data-page="Employee 360">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>People<span class="sep">/</span><a href="list.html">Employees</a><span class="sep">/</span>Vishali Nair</div>
+
+<div class="card mb-4"><div class="card-body">
+  <div class="profile-head">
+    <span class="avatar lg">VN</span>
+    <div class="flex-1">
+      <h1>Vishali Nair</h1>
+      <div class="meta">EMP-101 · Picker · Home: Room 1 · RFID card <span class="mono">4E500E06</span></div>
+    </div>
+    <span class="badge badge-success" style="font-size:.85rem;">● Active · in Room 1 now</span>
+    <button class="btn" data-action="edit">Edit</button>
+  </div>
+</div></div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="p-move">Recent Movements</button>
+  <button class="tab" data-tab="p-att">Attendance / RFID</button>
+  <button class="tab" data-tab="p-info">Profile</button>
+</div>
+
+<div class="tab-panel active" id="p-move">
+  <div class="card"><div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Product</th><th>Move</th><th>From → To</th><th>Time</th><th>Match</th></tr></thead>
+      <tbody>
+        <tr><td>Bosch GSB 12V Drill <span class="mono muted">PRD-0412</span></td><td><span class="badge badge-danger">OUT ×3</span></td><td class="text-2">Room 2·A → Dispatch</td><td class="mono">10 Jul 09:14</td><td><span class="mb ok">All ✓</span></td></tr>
+        <tr><td>M8 Hex Bolts <span class="mono muted">PRD-0188</span></td><td><span class="badge badge-success">IN ×50</span></td><td class="text-2">Inbound → Room 1·B</td><td class="mono">09 Jul 16:22</td><td><span class="mb ok">All ✓</span></td></tr>
+        <tr><td>Stainless Washers <span class="mono muted">PRD-0509</span></td><td><span class="badge badge-info">Transfer ×100</span></td><td class="text-2">Room 1·A → Room 1·C</td><td class="mono">09 Jul 11:03</td><td><span class="mb ok">All ✓</span></td></tr>
+        <tr><td>PVC Conduit 25mm <span class="mono muted">PRD-0421</span></td><td><span class="badge badge-danger">OUT ×12</span></td><td class="text-2">Room 3·A → Dispatch</td><td class="mono">08 Jul 14:41</td><td><span class="mb no">CCTV ✗</span></td></tr>
+      </tbody>
+    </table>
+  </div></div>
+</div>
+
+<div class="tab-panel" id="p-att">
+  <div class="card"><div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Date</th><th>Room</th><th>Entry (RFID tap)</th><th>Exit</th><th>Duration</th></tr></thead>
+      <tbody>
+        <tr><td>10 Jul 2026</td><td>Room 1</td><td class="mono">09:12</td><td class="text-3">— still in —</td><td>40m</td></tr>
+        <tr><td>09 Jul 2026</td><td>Room 1</td><td class="mono">08:58</td><td class="mono">17:04</td><td>8h 06m</td></tr>
+        <tr><td>08 Jul 2026</td><td>Room 3</td><td class="mono">10:20</td><td class="mono">10:52</td><td>32m</td></tr>
+        <tr><td>08 Jul 2026</td><td>Room 1</td><td class="mono">09:01</td><td class="mono">17:10</td><td>8h 09m</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+</div>
+
+<div class="tab-panel" id="p-info">
+  <div class="card"><div class="card-body">
+    <div class="grid-2">
+      <div>
+        <div class="kv"><span class="k">Full name</span><span class="v">Vishali Nair</span></div>
+        <div class="kv"><span class="k">Employee ID</span><span class="v mono">EMP-101</span></div>
+        <div class="kv"><span class="k">RFID card</span><span class="v mono">4E500E06</span></div>
+      </div>
+      <div>
+        <div class="kv"><span class="k">Role</span><span class="v">Picker</span></div>
+        <div class="kv"><span class="k">Home room</span><span class="v">Room 1</span></div>
+        <div class="kv"><span class="k">Status</span><span class="v text-success">Active</span></div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

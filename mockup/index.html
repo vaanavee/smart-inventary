@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WisRight Inventory · Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<style>
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+  .hero {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 55%, #7c3aed 100%);
+    color: #fff; border-radius: 18px; padding: 34px 36px; margin-bottom: 32px;
+    box-shadow: 0 20px 45px -18px rgba(79,70,229,.6);
+  }
+  .hero .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .hero .logo { width: 44px; height: 44px; border-radius: 11px; background: rgba(255,255,255,.16); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; }
+  .hero h1 { font-family: var(--font-display); font-size: 1.9rem; color:#fff; letter-spacing:-.02em; }
+  .hero p { color: rgba(255,255,255,.85); font-size: .95rem; max-width: 640px; margin-top: 6px; }
+  .hero-badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+  .hero-badges span { background: rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); color:#fff; padding:4px 12px; border-radius:999px; font-size:.76rem; font-weight:600; }
+  .hero-cta { margin-top:20px; }
+  .hero-cta a { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#4338ca; font-weight:700; padding:10px 20px; border-radius:10px; font-size:.9rem; }
+  .hero-cta a:hover { text-decoration:none; opacity:.92; }
+  .section-title { font-family: var(--font-display); font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); margin: 28px 0 12px; }
+  .mod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mod-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow-sm); transition: transform .12s, box-shadow .12s, border-color .12s; display:block; }
+  .mod-card:hover { text-decoration:none; transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--primary-100); }
+  .mod-card .ic { font-size: 1.6rem; }
+  .mod-card h3 { font-size: 1rem; margin: 8px 0 4px; color: var(--text); }
+  .mod-card p { font-size: .82rem; color: var(--text-2); line-height:1.45; }
+  .mod-card .cnt { display:inline-block; margin-top:12px; font-size:.78rem; font-weight:600; color: var(--primary); }
+  .foot { text-align:center; color: var(--text-3); font-size:.78rem; margin-top:40px; }
+  @media (max-width: 860px) { .mod-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .mod-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo-row"><div class="logo">WR</div><div style="font-weight:700;letter-spacing:.02em;">WISRIGHT INVENTORY</div></div>
+    <h1>QR + RFID Movement Tracker</h1>
+    <p>Products carry QR codes, employees carry RFID cards. Every stock movement is cross-checked against who was actually in the room — via door RFID, the in-app QR scan, and CCTV fallback.</p>
+    <div class="hero-badges">
+      <span>Simple PRD v1</span><span>9 modules · 13 screens</span><span>Client-demo mockup</span><span>No CCTV/AI counting</span>
+    </div>
+    <div class="hero-cta"><a href="login.html">▶ Start demo — Login</a></div>
+  </div>
+
+  <div class="section-title">Overview</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="01-dashboard/dashboard.html"><div class="ic">📊</div><h3>Dashboard</h3><p>Recent employee tracking with match badges, low-stock alerts (&lt;50), high material-out, unknown-person alerts.</p><span class="cnt">1 screen →</span></a>
+  </div>
+
+  <div class="section-title">Inventory</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="02-products/list.html"><div class="ic">📦</div><h3>Products</h3><p>Product catalog CRUD with per-product QR code generation for printing onto shelves.</p><span class="cnt">2 screens →</span></a>
+    <a class="mod-card" href="03-locations/list.html"><div class="ic">🗺️</div><h3>Locations</h3><p>Rooms → Racks hierarchy CRUD, each room mapped to its ESP32 RFID door reader.</p><span class="cnt">1 screen →</span></a>
+    <a class="mod-card" href="04-search/search.html"><div class="ic">🔎</div><h3>Product Search</h3><p>Find any product and see exactly where it lives — which room, which rack, current stock.</p><span class="cnt">1 screen →</span></a>
+  </div>
+
+  <div class="section-title">People</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="05-employees/list.html"><div class="ic">👷</div><h3>Employees</h3><p>Employee CRUD, each mapped to their physical RFID card number, with a 360 activity view.</p><span class="cnt">2 screens →</span></a>
+  </div>
+
+  <div class="section-title">Operations</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="06-scanner/scan.html"><div class="ic">📷</div><h3>QR Scanner</h3><p>Worker scans a product QR → prefilled update page → record IN / OUT / Transfer → confirmation.</p><span class="cnt">3 screens →</span></a>
+  </div>
+
+  <div class="section-title">Monitoring</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="07-cctv/monitoring.html"><div class="ic">🎥</div><h3>CCTV Monitoring</h3><p>Per-room camera grid — detected people, who tapped RFID vs unknown, unknown-person alerts.</p><span class="cnt">1 screen →</span></a>
+    <a class="mod-card" href="08-attendance/match.html"><div class="ic">🔗</div><h3>Attendance Match</h3><p>Reconcile every movement: RFID door entry vs QR scan vs CCTV sighting, with a verdict.</p><span class="cnt">1 screen →</span></a>
+  </div>
+
+  <div class="section-title">Reports</div>
+  <div class="mod-grid">
+    <a class="mod-card" href="09-reports/movement-report.html"><div class="ic">📈</div><h3>Movement Report</h3><p>Search a product + date range → all movements plus total Material IN / OUT / net change.</p><span class="cnt">1 screen →</span></a>
+  </div>
+
+  <div class="foot">Static mockup, no real data · Not a real application · WisRight Inventory © 2026</div>
+</div>
+</body></html>

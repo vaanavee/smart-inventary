@@ -1,0 +1,104 @@
+/* ============================================================
+   SMS Mockups — App Shell Layout (sidebar + topbar + content)
+   The sidebar/topbar markup is injected by assets/js/shell.js
+   ============================================================ */
+
+.app { display: flex; min-height: 100vh; }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: var(--sidebar-width); flex-shrink: 0;
+  background: var(--sidebar-bg); color: var(--sidebar-text);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 50;
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: #334155; }
+
+.sidebar .brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 18px; border-bottom: 1px solid #1e293b;
+}
+.sidebar .brand .logo {
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  background: var(--primary); color: #fff; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; font-size: .95rem;
+}
+.sidebar .brand .name { color: #fff; font-weight: 600; font-size: .9rem; line-height: 1.2; }
+.sidebar .brand .sub { font-size: .68rem; color: var(--sidebar-text); }
+
+.sidebar .nav-section { padding: 14px 12px 4px; }
+.sidebar .nav-section-title {
+  font-size: .66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: #475569; padding: 0 8px 6px;
+}
+.sidebar .nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 7px; margin-bottom: 1px;
+  color: var(--sidebar-text); font-size: .84rem; font-weight: 500;
+  text-decoration: none;
+}
+.sidebar .nav-item:hover { background: var(--sidebar-active-bg); color: #e2e8f0; text-decoration: none; }
+.sidebar .nav-item.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); }
+.sidebar .nav-item.active .ni-icon { opacity: 1; }
+.sidebar .nav-item .ni-icon { width: 18px; text-align: center; opacity: .8; font-size: .9rem; }
+.sidebar .sidebar-footer { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1e293b; font-size: .7rem; color: #475569; }
+
+/* ---------- Main column ---------- */
+.main { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; min-width: 0; }
+
+/* ---------- Topbar ---------- */
+.topbar {
+  height: 58px; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; padding: 0 24px;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar .module-title { font-weight: 600; font-size: .95rem; }
+.topbar .spacer { flex: 1; }
+.topbar .topbar-search {
+  width: 260px; padding: 7px 12px 7px 32px; font-size: .82rem;
+  border: 1px solid var(--border); border-radius: var(--radius-full);
+  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 11px center;
+  outline: none; font-family: var(--font);
+}
+.topbar .icon-btn {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: none; cursor: pointer; font-size: 1.05rem;
+  display: flex; align-items: center; justify-content: center; color: var(--text-2);
+}
+.topbar .icon-btn:hover { background: var(--bg); }
+.topbar .icon-btn .notif-dot {
+  position: absolute; top: 6px; right: 7px; width: 8px; height: 8px;
+  background: var(--danger); border-radius: 50%; border: 2px solid var(--surface);
+}
+.topbar .user-chip { display: flex; align-items: center; gap: 9px; cursor: pointer; padding: 4px 6px; border-radius: var(--radius); }
+.topbar .user-chip:hover { background: var(--bg); }
+.topbar .user-chip .u-name { font-size: .82rem; font-weight: 600; line-height: 1.15; }
+.topbar .user-chip .u-role { font-size: .7rem; color: var(--text-3); }
+
+/* ---------- Module tab strip (pages within a module) ---------- */
+.module-tabs {
+  display: flex; gap: 2px; padding: 0 24px; background: var(--surface);
+  border-bottom: 1px solid var(--border); overflow-x: auto;
+}
+.module-tabs a {
+  padding: 10px 14px; font-size: .83rem; font-weight: 500; color: var(--text-2);
+  border-bottom: 2px solid transparent; white-space: nowrap; text-decoration: none;
+}
+.module-tabs a:hover { color: var(--text); text-decoration: none; }
+.module-tabs a.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* ---------- Content ---------- */
+.content { padding: 24px; max-width: 1320px; width: 100%; }
+
+/* ---------- Public page (no shell, e.g. online admission form) ---------- */
+.public-wrap { min-height: 100vh; background: var(--bg); padding: 40px 16px; }
+.public-card { max-width: 720px; margin: 0 auto; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+}

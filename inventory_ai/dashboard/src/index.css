@@ -7,24 +7,24 @@
 }
 
 :root {
-  --color-surface: 247 248 250; /* #F7F8FA */
+  --color-surface: 248 250 252; /* #f8fafc */
   --color-surface-alt: 255 255 255; /* card/chrome white */
-  --color-ink: 26 26 26; /* #1A1A1A */
-  --color-muted: 107 114 128; /* #6B7280 */
-  --color-hairline: 0 0 0; /* black-tinted borders/overlays */
+  --color-ink: 15 23 42; /* #0f172a */
+  --color-muted: 71 85 105; /* #475569 */
+  --color-hairline: 15 23 42; /* slate-tinted borders/overlays */
 }
 
 :root.dark {
-  --color-surface: 15 17 21;
-  --color-surface-alt: 24 26 32;
-  --color-ink: 237 238 240;
-  --color-muted: 148 154 166;
+  --color-surface: 15 23 42; /* #0f172a */
+  --color-surface-alt: 30 41 59; /* #1e293b */
+  --color-ink: 226 232 240; /* #e2e8f0 */
+  --color-muted: 148 163 184; /* #94a3b8 */
   --color-hairline: 255 255 255;
 }
 
 html,
 body {
-  font-family: "Poppins", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   background: rgb(var(--color-surface));
   color: rgb(var(--color-ink));
   scroll-behavior: smooth;
@@ -52,32 +52,32 @@ body {
   }
 
   .card {
-    @apply bg-surface-alt rounded-xl shadow-soft border border-hairline/[0.05] transition-all duration-300;
+    @apply bg-surface-alt rounded-xl shadow-soft border border-hairline/10 transition-all duration-200;
   }
 
   .card-hover {
-    @apply hover:-translate-y-1 hover:shadow-lift;
+    @apply hover:shadow-lift hover:border-primary/20;
   }
 
   .btn-primary {
-    @apply bg-gradient-primary text-white font-medium rounded-xl px-5 py-2.5 shadow-soft
-      transition-all duration-300 hover:shadow-lift hover:-translate-y-0.5 active:translate-y-0
+    @apply bg-primary text-white font-medium rounded-lg px-4 py-2 text-sm shadow-soft
+      transition-all duration-200 hover:bg-primary-dark active:translate-y-px
       disabled:opacity-40 disabled:pointer-events-none relative overflow-hidden;
   }
 
   .btn-secondary {
-    @apply bg-surface-alt border border-hairline/10 text-ink font-medium rounded-xl px-5 py-2.5
-      transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-soft;
+    @apply bg-surface-alt border border-hairline/15 text-ink font-medium rounded-lg px-4 py-2 text-sm
+      transition-all duration-200 hover:border-primary/40 hover:bg-primary/5;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border border-transparent;
   }
 
   .input-field {
-    @apply w-full bg-surface-alt border border-hairline/10 rounded-xl px-4 py-2.5 text-sm text-ink
-      placeholder:text-muted transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
+    @apply w-full bg-surface-alt border border-hairline/15 rounded-lg px-3.5 py-2 text-sm text-ink
+      placeholder:text-muted transition-all duration-150
+      focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50;
   }
 
   .page-enter {

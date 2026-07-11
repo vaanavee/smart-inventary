@@ -6,6 +6,7 @@ import LiveDetection from "./pages/LiveDetection.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import Verification from "./pages/Verification.jsx";
 import Products from "./pages/Products.jsx";
+import ProductSearch from "./pages/ProductSearch.jsx";
 import Workers from "./pages/Workers.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -27,6 +28,7 @@ function AppLayout() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/verification" element={<Verification />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/product-search" element={<ProductSearch />} />
             <Route path="/workers" element={<Workers />} />
             <Route path="/history" element={<Navigate to="/verification" replace />} />
             <Route path="/analytics" element={<Analytics />} />

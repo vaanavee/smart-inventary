@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Match · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .sig { font-size:.72rem; font-weight:700; padding:2px 9px; border-radius:999px; border:1px solid; display:inline-block; }
+  .sig.ok { background:var(--success-bg); color:var(--success); border-color:var(--success-border); }
+  .sig.no { background:var(--danger-bg); color:var(--danger); border-color:var(--danger-border); }
+  .sig.warn { background:var(--warning-bg); color:var(--warning); border-color:var(--warning-border); }
+</style>
+</head>
+<body data-module="attendance" data-page="Attendance Match">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Monitoring<span class="sep">/</span>Attendance Match</div>
+<div class="page-header">
+  <div><h1>Attendance Match / Reconciliation</h1><div class="subtitle">Every movement checked: RFID door entry vs QR scan vs CCTV sighting</div></div>
+  <div class="flex"><button class="btn" data-action="export">⬇ Export</button></div>
+</div>
+
+<div class="grid-4 mb-4">
+  <div class="kpi"><div class="kpi-label">Movements today</div><div class="kpi-value">37</div></div>
+  <div class="kpi"><div class="kpi-label">Verified (all ✓)</div><div class="kpi-value text-success">33</div></div>
+  <div class="kpi"><div class="kpi-label">Needs review</div><div class="kpi-value text-warning">3</div></div>
+  <div class="kpi"><div class="kpi-label">Alert</div><div class="kpi-value text-danger">1</div></div>
+</div>
+
+<div class="toolbar">
+  <div class="flex" style="gap:6px">
+    <span class="chip active">All</span><span class="chip">Verified</span><span class="chip">Review</span><span class="chip">Alert</span>
+  </div>
+  <span class="flex-1"></span>
+  <select class="select" style="width:auto"><option>All rooms</option><option>Room 1</option><option>Room 2</option><option>Room 3</option></select>
+  <input class="input" type="date" value="2026-07-10" style="width:auto">
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Reconciliation Log</h2><span class="badge badge-neutral">Today · 10 Jul</span></div>
+  <div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Ref</th><th>Employee</th><th>Product / Move</th><th>Room</th><th>RFID</th><th>QR</th><th>CCTV</th><th>Verdict</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">MOV-004821</td><td>Vishali Nair</td><td>Drill · OUT ×3</td><td>Room 2</td>
+          <td><span class="sig ok">✓ 09:51</span></td><td><span class="sig ok">✓ 09:14</span></td><td><span class="sig ok">✓</span></td>
+          <td><span class="badge badge-success">Verified</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="#">Details</a></td>
+        </tr>
+        <tr>
+          <td class="mono">MOV-004822</td><td>Arjun Das</td><td>Grinder · Transfer ×2</td><td>Room 2</td>
+          <td><span class="sig ok">✓ 09:40</span></td><td><span class="sig ok">✓ 09:41</span></td><td><span class="sig ok">✓</span></td>
+          <td><span class="badge badge-success">Verified</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="#">Details</a></td>
+        </tr>
+        <tr class="row-danger">
+          <td class="mono">MOV-004823</td><td>— unresolved —</td><td>Copper Wire · OUT ×5</td><td>Room 2</td>
+          <td><span class="sig no">✗ none</span></td><td><span class="sig ok">✓ 09:47</span></td><td><span class="sig warn">⚠ unknown</span></td>
+          <td><span class="badge badge-danger">Alert</span></td>
+          <td class="text-right"><button class="btn btn-sm" data-action="verify">Resolve</button></td>
+        </tr>
+        <tr class="row-warning">
+          <td class="mono">MOV-004819</td><td>Vaanavee R.</td><td>LED Panel · OUT ×6</td><td>Room 3</td>
+          <td><span class="sig ok">✓ 08:57</span></td><td><span class="sig ok">✓ 08:58</span></td><td><span class="sig no">✗ offline</span></td>
+          <td><span class="badge badge-warning">Review</span></td>
+          <td class="text-right"><button class="btn btn-sm" data-action="verify">Accept</button></td>
+        </tr>
+        <tr class="row-warning">
+          <td class="mono">MOV-004815</td><td>Suraj Menon</td><td>Impact Driver · OUT ×2</td><td>Room 2</td>
+          <td><span class="sig ok">✓ 08:32</span></td><td><span class="sig no">✗ none</span></td><td><span class="sig ok">✓</span></td>
+          <td><span class="badge badge-warning">Review</span></td>
+          <td class="text-right"><button class="btn btn-sm" data-action="verify">Accept</button></td>
+        </tr>
+        <tr>
+          <td class="mono">MOV-004812</td><td>Vishal Kumar</td><td>Hex Bolts · IN ×20</td><td>Room 1</td>
+          <td><span class="sig ok">✓ 09:04</span></td><td><span class="sig ok">✓ 09:05</span></td><td><span class="sig ok">✓</span></td>
+          <td><span class="badge badge-success">Verified</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="#">Details</a></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination"><span>Showing 6 of 37</span>
+      <button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">›</button></div>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

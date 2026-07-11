@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movement Report · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .rep-toolbar { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+  .rep-toolbar .form-group { margin-bottom:0; }
+  .bars-legend { display:flex; gap:16px; font-size:.78rem; color:var(--text-2); }
+  .lg { display:inline-flex; align-items:center; gap:6px; }
+  .lg .sw { width:12px; height:12px; border-radius:3px; }
+</style>
+</head>
+<body data-module="reports" data-page="Movement Report">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Reports<span class="sep">/</span>Movement Report</div>
+<div class="page-header">
+  <div><h1>Product Movement Report</h1><div class="subtitle">Search a product + date range · every IN / OUT / Transfer with totals</div></div>
+  <div class="flex"><button class="btn" data-action="export">⬇ Export CSV</button><button class="btn" data-action="print">🖨 Print</button></div>
+</div>
+
+<div class="card mb-4"><div class="card-body">
+  <div class="rep-toolbar">
+    <div class="form-group" style="flex:1;min-width:240px"><label>Product</label><select class="select"><option>Bosch GSB 12V Drill · PRD-0412</option><option>Copper Wire Spool · PRD-0207</option><option>LED Panel 18W · PRD-0533</option></select></div>
+    <div class="form-group"><label>From</label><input class="input" type="date" value="2026-07-01" style="width:auto"></div>
+    <div class="form-group"><label>To</label><input class="input" type="date" value="2026-07-10" style="width:auto"></div>
+    <button class="btn btn-primary" data-action="toast" data-msg="Report generated for PRD-0412 · 01–10 Jul">Run report</button>
+  </div>
+</div></div>
+
+<!-- Totals -->
+<div class="grid-4 mb-4">
+  <div class="kpi"><div class="kpi-label">Material IN</div><div class="kpi-value text-success">60</div><div class="kpi-delta">3 receipts</div></div>
+  <div class="kpi"><div class="kpi-label">Material OUT</div><div class="kpi-value text-danger">86</div><div class="kpi-delta">14 picks</div></div>
+  <div class="kpi"><div class="kpi-label">Transfers (in / out)</div><div class="kpi-value">12 / 12</div><div class="kpi-delta">4 moves</div></div>
+  <div class="kpi"><div class="kpi-label">Net change</div><div class="kpi-value text-danger">−26</div><div class="kpi-delta down">→ 34 on hand</div></div>
+</div>
+
+<div class="grid-2 mb-4" style="align-items:start">
+  <div class="card"><div class="card-body">
+    <div class="flex-between mb-3"><h2>IN vs OUT by day</h2>
+      <div class="bars-legend"><span class="lg"><span class="sw" style="background:var(--primary)"></span>IN</span><span class="lg"><span class="sw" style="background:#a5b4fc"></span>OUT</span></div>
+    </div>
+    <div class="bars">
+      <div class="bar-col"><div class="bar-v" style="height:30%"></div><div class="bar-l">01</div></div>
+      <div class="bar-col"><div class="bar-v alt" style="height:52%"></div><div class="bar-l">02</div></div>
+      <div class="bar-col"><div class="bar-v" style="height:70%"></div><div class="bar-l">04</div></div>
+      <div class="bar-col"><div class="bar-v alt" style="height:44%"></div><div class="bar-l">05</div></div>
+      <div class="bar-col"><div class="bar-v alt" style="height:88%"></div><div class="bar-l">07</div></div>
+      <div class="bar-col"><div class="bar-v alt" style="height:36%"></div><div class="bar-l">08</div></div>
+      <div class="bar-col"><div class="bar-v alt" style="height:60%"></div><div class="bar-l">10</div></div>
+    </div>
+  </div></div>
+
+  <div class="card"><div class="card-body">
+    <h2 class="mb-3">Where it moved</h2>
+    <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>Room 2 · Rack A (home)</span><span class="badge badge-neutral">34 on hand</span></div>
+    <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>→ Dispatch / Out</span><span class="badge badge-danger">86 out</span></div>
+    <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>→ Room 1 · Rack D</span><span class="badge badge-info">12 transfer</span></div>
+    <div class="flex-between" style="padding:8px 0"><span>← Inbound receipts</span><span class="badge badge-success">60 in</span></div>
+  </div></div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Movement Ledger · Bosch GSB 12V Drill</h2><span class="badge badge-neutral">PRD-0412 · 01–10 Jul</span></div>
+  <div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Date / Time</th><th>Ref</th><th>Type</th><th>Qty</th><th>From → To</th><th>By</th><th>Balance</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">10 Jul 09:14</td><td class="mono">MOV-004821</td><td><span class="badge badge-danger">OUT</span></td><td>3</td><td class="text-2">Room 2·A → Dispatch</td><td>Vishali Nair</td><td class="mono">34</td></tr>
+        <tr><td class="mono">08 Jul 14:02</td><td class="mono">MOV-004790</td><td><span class="badge badge-danger">OUT</span></td><td>8</td><td class="text-2">Room 2·A → Dispatch</td><td>Suraj Menon</td><td class="mono">37</td></tr>
+        <tr><td class="mono">07 Jul 11:20</td><td class="mono">MOV-004741</td><td><span class="badge badge-success">IN</span></td><td>25</td><td class="text-2">Inbound → Room 2·A</td><td>Vishal Kumar</td><td class="mono">45</td></tr>
+        <tr><td class="mono">07 Jul 10:05</td><td class="mono">MOV-004738</td><td><span class="badge badge-danger">OUT</span></td><td>15</td><td class="text-2">Room 2·A → Dispatch</td><td>Arjun Das</td><td class="mono">20</td></tr>
+        <tr><td class="mono">05 Jul 15:44</td><td class="mono">MOV-004702</td><td><span class="badge badge-info">Transfer</span></td><td>12</td><td class="text-2">Room 2·A → Room 1·D</td><td>Vaanavee R.</td><td class="mono">35</td></tr>
+        <tr><td class="mono">04 Jul 09:31</td><td class="mono">MOV-004660</td><td><span class="badge badge-success">IN</span></td><td>35</td><td class="text-2">Inbound → Room 2·A</td><td>Vishal Kumar</td><td class="mono">47</td></tr>
+        <tr><td class="mono">02 Jul 16:10</td><td class="mono">MOV-004610</td><td><span class="badge badge-danger">OUT</span></td><td>18</td><td class="text-2">Room 2·A → Dispatch</td><td>Vishali Nair</td><td class="mono">12</td></tr>
+      </tbody>
+    </table>
+    <div class="pagination"><span>Showing 7 of 21 movements</span>
+      <button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button></div>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

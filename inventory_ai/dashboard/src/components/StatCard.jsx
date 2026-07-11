@@ -8,25 +8,20 @@ const ICON_BG = {
 
 export default function StatCard({ icon: Icon, label, value, sub, tone = "primary", trend }) {
   return (
-    <div className="card card-hover p-5 flex flex-col gap-3">
+    <div className="card p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div className={`w-11 h-11 rounded-xl ${ICON_BG[tone]} flex items-center justify-center shadow-soft`}>
-          <Icon size={20} className="text-white" strokeWidth={2.25} />
+        <p className="text-xs font-medium text-muted uppercase tracking-wide">{label}</p>
+        <div className={`w-8 h-8 rounded-lg ${ICON_BG[tone]} flex items-center justify-center`}>
+          <Icon size={15} className="text-white" strokeWidth={2.25} />
         </div>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <p className="text-2xl font-display font-bold text-ink tracking-tight">{value}</p>
         {trend !== undefined && trend !== null && (
-          <span
-            className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              trend >= 0 ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
-            }`}
-          >
-            {trend >= 0 ? "+" : ""}
-            {trend}%
+          <span className={`text-xs font-semibold ${trend >= 0 ? "text-success" : "text-danger"}`}>
+            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
           </span>
         )}
-      </div>
-      <div>
-        <p className="text-2xl font-semibold text-ink tracking-tight">{value}</p>
-        <p className="text-sm text-muted mt-0.5">{label}</p>
       </div>
       {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>

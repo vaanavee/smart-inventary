@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { ScanLine, CheckCircle2, XCircle, Loader2, PackageSearch, History as HistoryIcon, ClipboardPlus } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { ScanLine, CheckCircle2, ClipboardPlus, RefreshCw, Eye } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
-import ProgressBar from "../components/ProgressBar.jsx";
 import { api } from "../api/client.js";
 import { monitorApi } from "../api/monitorClient.js";
 
@@ -10,58 +10,51 @@ const ROOMS = ["Room 1", "Room 2", "Room 3"];
 const RACKS = ["A", "B", "C", "D", "E"];
 const ACTIONS = ["Stock In", "Stock Out", "Transfer"];
 
-const STATUS_TONE = {
-  VERIFIED: "success",
-  WRONG_PRODUCT: "danger",
-  MISSING_PRODUCT: "warning",
-  EXTRA_PRODUCT: "info",
-  UNEXPECTED_PRODUCT: "violet",
-  MIXED_PRODUCTS: "violet",
-};
-
-const STATUSES = [
-  "",
-  "VERIFIED",
-  "WRONG_PRODUCT",
-  "MISSING_PRODUCT",
-  "EXTRA_PRODUCT",
-  "UNEXPECTED_PRODUCT",
-  "MIXED_PRODUCTS",
-];
-
-const STEPS = ["Scan Box ID", "Select Worker", "Capture Frame", "Run RT-DETR", "Compare & Verify"];
-
 const TABS = [
-  { id: "verify", label: "Verify Box", icon: ScanLine },
-  { id: "history", label: "Verification History", icon: HistoryIcon },
+  { id: "reconciliation", label: "Attendance Match", icon: ScanLine },
+  { id: "verify", label: "Verify Box", icon: CheckCircle2 },
   { id: "manual", label: "Manual Entry", icon: ClipboardPlus },
 ];
 
 export default function Verification() {
-  const [tab, setTab] = useState("verify");
+  const [tab, setTab] = useState("reconciliation");
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Verification"
-        subtitle={
-          tab === "verify"
-            ? "Scan a box to verify product and quantity against expected inventory"
-            : tab === "history"
-            ? "Audit log of box verification transactions"
-            : "Log new stock being sent to a room/rack without scanning"
-        }
-      />
+    <div className="flex flex-col gap-6 font-display">
+      {/* Breadcrumb */}
+      <div className="text-xs text-slate-400 flex items-center gap-1.5 -mb-2">
+        <Link to="/" className="hover:underline text-slate-400">Home</Link>
+        <span className="text-slate-300">/</span>
+        <span>Monitoring</span>
+        <span className="text-slate-300">/</span>
+        <span className="text-slate-500 font-medium">Attendance Match</span>
+      </div>
 
-      <div className="inline-flex flex-wrap rounded-xl bg-hairline/[0.05] p-1 gap-1 w-fit">
+      {/* Page Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-slate-900 leading-none">
+            {tab === "reconciliation" ? "Attendance Match / Reconciliation" : tab === "verify" ? "Verify Box" : "Manual Entry"}
+          </h1>
+          <div className="text-sm text-slate-400 mt-2">
+            {tab === "reconciliation" && "Every movement checked: RFID door entry vs QR scan vs CCTV sighting"}
+            {tab === "verify" && "Scan a box to verify product and quantity against expected inventory"}
+            {tab === "manual" && "Log new stock being sent to a room/rack without scanning"}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-100 mb-5 overflow-x-auto w-full">
         {TABS.map((t) => {
           const Icon = t.icon;
+          const active = tab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                tab === t.id ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+              className={`flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 bg-transparent transition-all ${
+                active ? "border-primary text-primary" : "border-transparent text-slate-400 hover:text-slate-600"
               }`}
             >
               <Icon size={15} /> {t.label}
@@ -70,13 +63,323 @@ export default function Verification() {
         })}
       </div>
 
+      {tab === "reconciliation" && <AttendanceReconciliationTab />}
       {tab === "verify" && <VerifyBoxTab />}
-      {tab === "history" && <HistoryTab />}
       {tab === "manual" && <ManualEntryTab />}
     </div>
   );
 }
 
+// NEW TAB: ATTENDANCE RECONCILIATION LOG
+function AttendanceReconciliationTab() {
+  const [movements, setMovements] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [roomFilter, setRoomFilter] = useState("All rooms");
+  const [dateFilter, setDateFilter] = useState("2026-07-10");
+
+  const loadData = () => {
+    // Core default mockup logs
+    const defaultLogs = [
+      { ref: "MOV-004821", employee_name: "Vishali Nair", product_name: "Drill", action: "OUT", quantity: 3, room: "Room 2", rfid: "✓ 09:51", qr: "✓ 09:14", cctv: "ok", verdict: "Verified" },
+      { ref: "MOV-004822", employee_name: "Arjun Das", product_name: "Grinder", action: "Transfer", quantity: 2, room: "Room 2", rfid: "✓ 09:40", qr: "✓ 09:41", cctv: "ok", verdict: "Verified" },
+      { ref: "MOV-004823", employee_name: "— unresolved —", product_name: "Copper Wire", action: "OUT", quantity: 5, room: "Room 2", rfid: "✗ none", qr: "✓ 09:47", cctv: "warn", verdict: "Alert" },
+      { ref: "MOV-004819", employee_name: "Vaanavee R.", product_name: "LED Panel", action: "OUT", quantity: 6, room: "Room 3", rfid: "✓ 08:57", qr: "✓ 08:58", cctv: "no", verdict: "Review" },
+      { ref: "MOV-004815", employee_name: "Suraj Menon", product_name: "Impact Driver", action: "OUT", quantity: 2, room: "Room 2", rfid: "✓ 08:32", qr: "✗ none", cctv: "ok", verdict: "Review" },
+      { ref: "MOV-004812", employee_name: "Vishal Kumar", product_name: "Hex Bolts", action: "IN", quantity: 20, room: "Room 1", rfid: "✓ 09:04", qr: "✓ 09:05", cctv: "ok", verdict: "Verified" }
+    ];
+
+    // Load any user scans created in QR Scanner
+    const stored = localStorage.getItem("local-movements");
+    const localMoves = stored ? JSON.parse(stored) : [];
+
+    // Combine local additions
+    const combined = [];
+    localMoves.forEach((lm) => {
+      combined.push({
+        ref: lm.ref,
+        employee_name: lm.employee_name,
+        product_name: lm.product_name,
+        action: lm.action,
+        quantity: lm.quantity,
+        room: lm.room,
+        rfid: `✓ ${lm.rfid_time}`,
+        qr: `✓ ${lm.qr_time}`,
+        cctv: "ok",
+        verdict: "Verified"
+      });
+    });
+
+    defaultLogs.forEach((item) => {
+      combined.push(item);
+    });
+
+    setMovements(combined);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filtered movements list
+  const filtered = useMemo(() => {
+    return movements.filter((m) => {
+      const matchesStatus =
+        statusFilter === "All" || m.verdict === statusFilter;
+      const matchesRoom =
+        roomFilter === "All rooms" || m.room === roomFilter;
+      return matchesStatus && matchesRoom;
+    });
+  }, [movements, statusFilter, roomFilter]);
+
+  // KPI Calculations
+  const stats = useMemo(() => {
+    const total = movements.length;
+    const verified = movements.filter(m => m.verdict === "Verified").length;
+    const review = movements.filter(m => m.verdict === "Review").length;
+    const alert = movements.filter(m => m.verdict === "Alert").length;
+    return { total, verified, review, alert };
+  }, [movements]);
+
+  // Resolve warning/alerts handlers
+  const handleResolveAlert = (ref) => {
+    const updated = movements.map((m) => {
+      if (m.ref === ref) {
+        return {
+          ...m,
+          employee_name: "Vishali Nair",
+          rfid: "✓ 09:46",
+          cctv: "ok",
+          verdict: "Verified"
+        };
+      }
+      return m;
+    });
+    setMovements(updated);
+    alert(`Alert resolved! Transaction ${ref} is now Verified.`);
+  };
+
+  const handleAcceptReview = (ref) => {
+    const updated = movements.map((m) => {
+      if (m.ref === ref) {
+        return {
+          ...m,
+          verdict: "Verified"
+        };
+      }
+      return m;
+    });
+    setMovements(updated);
+    alert(`Accepted review! Transaction ${ref} is now Verified.`);
+  };
+
+  // CSV Exporter
+  const handleExport = () => {
+    const headers = "Ref,Employee,Product / Move,Room,RFID,QR,CCTV,Verdict\n";
+    const rows = movements.map(m => `"${m.ref}","${m.employee_name}","${m.product_name} · ${m.action} ×${m.quantity}","${m.room}","${m.rfid}","${m.qr}","${m.cctv === "ok" ? "OK" : m.cctv}","${m.verdict}"`).join("\n");
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reconciliation_log_${dateFilter}.csv`;
+    a.click();
+  };
+
+  return (
+    <div className="flex flex-col gap-6 animate-fadeIn">
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+          <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Movements today</div>
+          <div className="text-3xl font-bold text-slate-900 mt-2">{stats.total}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+          <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Verified (all ✓)</div>
+          <div className="text-3xl font-bold text-emerald-600 mt-2">{stats.verified}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+          <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Needs review</div>
+          <div className="text-3xl font-bold text-amber-500 mt-2">{stats.review}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+          <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Alert</div>
+          <div className="text-3xl font-bold text-red-500 mt-2">{stats.alert}</div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1.5">
+          {["All", "Verified", "Review", "Alert"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                statusFilter === status
+                  ? "bg-primary-50 border-primary text-primary font-semibold"
+                  : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
+        <span className="flex-grow"></span>
+
+        <select
+          value={roomFilter}
+          onChange={(e) => setRoomFilter(e.target.value)}
+          className="input-field w-auto rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+        >
+          <option value="All rooms">All rooms</option>
+          <option value="Room 1">Room 1</option>
+          <option value="Room 2">Room 2</option>
+          <option value="Room 3">Room 3</option>
+        </select>
+
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="input-field w-auto rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+        />
+
+        <button
+          onClick={handleExport}
+          className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+        >
+          ⬇ Export CSV
+        </button>
+      </div>
+
+      {/* Reconciliation Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-soft overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold text-slate-900">Reconciliation Log</h2>
+          <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded">
+            Today · 10 Jul
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse text-left">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
+                <th className="px-5 py-3">Ref</th>
+                <th className="px-5 py-3">Employee</th>
+                <th className="px-5 py-3">Product / Move</th>
+                <th className="px-5 py-3">Room</th>
+                <th className="px-5 py-3">RFID</th>
+                <th className="px-5 py-3">QR</th>
+                <th className="px-5 py-3">CCTV</th>
+                <th className="px-5 py-3">Verdict</th>
+                <th className="px-5 py-3 text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((m) => (
+                <tr
+                  key={m.ref}
+                  className={`hover:bg-slate-50/50 transition-colors ${
+                    m.verdict === "Alert"
+                      ? "bg-red-50/30"
+                      : m.verdict === "Review"
+                      ? "bg-amber-50/30"
+                      : ""
+                  }`}
+                >
+                  <td className="px-5 py-3.5 font-mono text-xs text-slate-900">{m.ref}</td>
+                  <td className="px-5 py-3.5 text-slate-900 font-medium">{m.employee_name}</td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs font-medium">
+                    {m.product_name} · {m.action} ×{m.quantity}
+                  </td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs">{m.room}</td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 border rounded-full leading-none ${
+                      m.rfid.includes("✓")
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : "bg-red-50 text-red-600 border-red-100"
+                    }`}>
+                      {m.rfid}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 border rounded-full leading-none ${
+                      m.qr.includes("✓")
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : "bg-red-50 text-red-600 border-red-100"
+                    }`}>
+                      {m.qr}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 border rounded-full leading-none ${
+                      m.cctv === "ok"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : m.cctv === "no" || m.cctv === "offline"
+                        ? "bg-red-50 text-red-600 border-red-100"
+                        : "bg-amber-50 text-amber-600 border-amber-100"
+                    }`}>
+                      {m.cctv === "ok" ? "✓" : m.cctv === "no" || m.cctv === "offline" ? "✗ offline" : "⚠ unknown"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 border rounded-full leading-none ${
+                      m.verdict === "Verified"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : m.verdict === "Review"
+                        ? "bg-amber-50 text-amber-600 border-amber-100"
+                        : "bg-red-50 text-red-600 border-red-100"
+                    }`}>
+                      {m.verdict}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                    {m.verdict === "Alert" ? (
+                      <button
+                        onClick={() => handleResolveAlert(m.ref)}
+                        className="px-3 py-1.5 border border-red-200 hover:bg-red-50 text-red-600 text-xs font-semibold rounded transition-colors"
+                      >
+                        Resolve
+                      </button>
+                    ) : m.verdict === "Review" ? (
+                      <button
+                        onClick={() => handleAcceptReview(m.ref)}
+                        className="px-3 py-1.5 border border-amber-200 hover:bg-amber-50 text-amber-600 text-xs font-semibold rounded transition-colors"
+                      >
+                        Accept
+                      </button>
+                    ) : (
+                      <button className="px-2 py-1 text-xs font-semibold text-slate-400 hover:underline bg-transparent border-0 cursor-default">
+                        Details
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan="9" className="px-5 py-8 text-center text-xs text-slate-400">
+                    No transactions match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <span>Showing {filtered.length} of {movements.length} logs</span>
+          <div className="flex gap-1">
+            <button className="w-7 h-7 border border-slate-200 rounded flex items-center justify-center bg-primary text-white font-medium">1</button>
+            <button className="w-7 h-7 border border-slate-200 rounded flex items-center justify-center hover:bg-slate-50 text-slate-600">2</button>
+            <button className="w-7 h-7 border border-slate-200 rounded flex items-center justify-center hover:bg-slate-50 text-slate-600">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ORIGINAL TABS (re-themed for consistency)
 function VerifyBoxTab() {
   const [boxId, setBoxId] = useState("");
   const [workerId, setWorkerId] = useState("");
@@ -95,148 +398,103 @@ function VerifyBoxTab() {
   }, []);
 
   const runVerification = async () => {
+    if (!boxId || !workerId) return;
+    setLoading(true);
     setError(null);
     setResult(null);
-    setLoading(true);
     try {
-      const data = await api.post("/verify", { box_id: boxId, worker_id: Number(workerId) });
+      const data = await api.post("/verify/run", { box_id: boxId, worker_id: Number(workerId) });
       setResult(data);
       api.get("/history?limit=6").then(setRecent).catch(() => {});
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Verification run failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  const activeStep = !boxId ? 0 : !workerId ? 1 : loading ? 3 : result ? 4 : 2;
-
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-fadeIn">
-      <div className="xl:col-span-2 card p-8 flex flex-col items-center gap-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial-soft pointer-events-none" />
-
-        <div className="relative w-full max-w-md flex flex-col gap-4 z-10">
-          <label className="text-sm font-medium text-ink">
-            Box ID
-            <div className="relative mt-1.5">
-              <PackageSearch size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-              <input
-                value={boxId}
-                onChange={(e) => setBoxId(e.target.value)}
-                placeholder="e.g. B001"
-                className="input-field pl-11 text-base py-3.5"
-              />
-            </div>
-          </label>
-
-          <label className="text-sm font-medium text-ink">
-            Worker
-            <select
-              value={workerId}
-              onChange={(e) => setWorkerId(e.target.value)}
-              className="input-field mt-1.5 py-3.5"
-            >
-              <option value="">Select worker</option>
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-soft flex flex-col gap-4">
+        <h3 className="font-semibold text-slate-800 text-sm">Visual box verification</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          <label className="text-xs font-semibold text-slate-700">
+            Select Worker
+            <select value={workerId} onChange={(e) => setWorkerId(e.target.value)} className="input-field mt-1.5">
+              <option value="">Select worker...</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
-                  {w.name} — {w.department}
+                  {w.name} (#{w.id})
                 </option>
               ))}
             </select>
           </label>
 
-          <div
-            className={`relative mt-2 rounded-2xl border-2 border-dashed p-8 flex flex-col items-center justify-center gap-3 transition-colors ${
-              loading ? "border-primary bg-primary/[0.04]" : "border-hairline/10"
-            }`}
-          >
-            {loading && (
-              <div className="absolute inset-x-4 top-4 h-0.5 bg-gradient-primary rounded-full animate-scanLine" />
-            )}
-            <ScanLine size={40} className={loading ? "text-primary animate-pulse" : "text-muted"} strokeWidth={1.5} />
-            <p className="text-xs text-muted text-center">
-              {loading ? "Capturing frame & running RT-DETR…" : "Ready to scan verification tray"}
-            </p>
-          </div>
-
-          <button
-            onClick={runVerification}
-            disabled={!boxId || !workerId || loading}
-            className="btn-primary ripple flex items-center justify-center gap-2 text-base py-3.5"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <ScanLine size={18} />}
-            {loading ? "Verifying…" : "Scan & Verify"}
-          </button>
-
-          {error && <p className="text-sm text-danger text-center">{error}</p>}
+          <label className="text-xs font-semibold text-slate-700">
+            Box ID
+            <input
+              type="text"
+              value={boxId}
+              onChange={(e) => setBoxId(e.target.value)}
+              placeholder="e.g. BOX-001"
+              className="input-field mt-1.5"
+            />
+          </label>
         </div>
 
+        <button
+          onClick={runVerification}
+          disabled={!boxId || !workerId || loading}
+          className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg transition-all shadow-soft flex items-center justify-center gap-2 mt-2"
+        >
+          {loading ? "Running AI comparison..." : "Compare & Verify"}
+        </button>
+
+        {error && <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg font-medium">{error}</div>}
+
         {result && (
-          <div className="relative z-10 w-full max-w-md card !shadow-none border border-hairline/[0.06] p-5 animate-slideUp">
-            <div className="flex items-center gap-2 mb-2">
-              {result.status === "VERIFIED" ? (
-                <CheckCircle2 size={20} className="text-success" />
-              ) : (
-                <XCircle size={20} className="text-danger" />
-              )}
-              <Badge tone={STATUS_TONE[result.status] || "neutral"}>{result.status.replace(/_/g, " ")}</Badge>
+          <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <span className="font-bold text-slate-800 text-sm">AI Verification Verdict</span>
+              <Badge tone={result.verification_status === "VERIFIED" ? "success" : "danger"}>
+                {result.verification_status}
+              </Badge>
             </div>
-            <p className="text-sm text-muted">{result.details}</p>
-            <div className="grid grid-cols-2 gap-4 mt-4 text-xs">
-              <div>
-                <p className="text-muted mb-1 font-medium">Expected</p>
-                <pre className="bg-hairline/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.expected, null, 2)}</pre>
-              </div>
-              <div>
-                <p className="text-muted mb-1 font-medium">Detected</p>
-                <pre className="bg-hairline/[0.03] rounded-lg p-2.5 overflow-x-auto">{JSON.stringify(result.detected, null, 2)}</pre>
-              </div>
+            <div className="grid grid-cols-2 gap-y-2 text-xs">
+              <span className="text-slate-400">Expected SKU count:</span>
+              <span className="font-semibold text-slate-800 text-right">{result.expected_quantity}</span>
+              <span className="text-slate-400">Detected box count:</span>
+              <span className="font-semibold text-slate-800 text-right">{result.detected_quantity}</span>
+              <span className="text-slate-400">Model Confidence score:</span>
+              <span className="font-semibold text-slate-800 text-right">{(result.confidence_score * 100).toFixed(1)}%</span>
             </div>
-            <p className="text-xs text-muted mt-3">
-              Confidence: {(result.confidence * 100).toFixed(0)}% • Transaction #{result.transaction_id}
-            </p>
           </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-6">
-        <div className="card p-6">
-          <h3 className="font-semibold text-ink mb-4">Verification Steps</h3>
-          <ol className="flex flex-col gap-4">
-            {STEPS.map((step, i) => (
-              <li key={step} className="flex items-center gap-3">
-                <span
-                  className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-                    i < activeStep
-                      ? "bg-success text-white"
-                      : i === activeStep
-                      ? "bg-gradient-primary text-white"
-                      : "bg-hairline/[0.06] text-muted"
-                  }`}
-                >
-                  {i < activeStep ? <CheckCircle2 size={14} /> : i + 1}
+      {/* Recent scans list */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+        <h3 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2 mb-3">Recent Scans</h3>
+        <ul className="flex flex-col gap-3">
+          {recent.map((r, i) => (
+            <li key={i} className="text-xs flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-slate-800">Box Verification #{r.id}</span>
+                <span className={`text-[9px] font-bold px-2 py-0.5 border rounded-full leading-none uppercase ${
+                  r.verification_status === "VERIFIED"
+                    ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                    : "bg-red-50 text-red-600 border-red-100"
+                }`}>
+                  {r.verification_status}
                 </span>
-                <span className={`text-sm ${i <= activeStep ? "text-ink font-medium" : "text-muted"}`}>{step}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        <div className="card p-6">
-          <h3 className="font-semibold text-ink mb-4">Recent Verifications</h3>
-          <ul className="flex flex-col divide-y divide-hairline/[0.05]">
-            {recent.map((t) => (
-              <li key={t.id} className="py-2.5 flex items-center justify-between text-sm">
-                <span className="text-muted">#{t.id}</span>
-                <Badge tone={STATUS_TONE[t.verification_status] || "neutral"}>
-                  {t.verification_status.replace(/_/g, " ")}
-                </Badge>
-              </li>
-            ))}
-            {recent.length === 0 && <li className="py-2.5 text-sm text-muted">No verifications yet.</li>}
-          </ul>
-        </div>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Score: {(r.confidence_score * 100).toFixed(0)}% · {new Date(r.timestamp).toLocaleTimeString()}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -249,19 +507,15 @@ function ManualEntryTab() {
   const [productId, setProductId] = useState("");
   const [room, setRoom] = useState("");
   const [rack, setRack] = useState("");
-  const [action, setAction] = useState(ACTIONS[0]);
+  const [action, setAction] = useState("Stock In");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const [recent, setRecent] = useState([]);
 
-  const loadRecent = () =>
-    monitorApi
-      .get("/movements?date=" + new Date().toISOString().slice(0, 10))
-      .then((rows) => setRecent(rows.filter((r) => r.source === "manual").slice(-10).reverse()))
-      .catch(() => {});
+  const loadRecent = () => api.get("/history/manual?limit=5").then(setRecent).catch(() => {});
 
   useEffect(() => {
     monitorApi.get("/employees").then(setEmployees).catch(() => {});
@@ -269,66 +523,60 @@ function ManualEntryTab() {
     loadRecent();
   }, []);
 
-  const reset = () => {
-    setProductId("");
-    setRoom("");
-    setRack("");
-    setAction(ACTIONS[0]);
-    setQuantity("");
-    setNotes("");
-  };
-
   const submit = async () => {
+    if (!empId || !productId || !room || !rack || !quantity) return;
+    setSubmitting(true);
     setError(null);
     setSuccess(null);
-    setSubmitting(true);
     try {
-      await monitorApi.post("/movements", {
-        empId,
-        productId,
+      await api.post("/verify/manual", {
+        emp_id: empId,
+        product_id: productId,
         room,
         rack,
         action,
-        quantity: quantity ? Number(quantity) : null,
+        qty: Number(quantity),
         notes,
       });
-      setSuccess("Entry logged.");
-      reset();
+      setSuccess("Manual stock entry successfully logged.");
+      setEmpId("");
+      setProductId("");
+      setRoom("");
+      setRack("");
+      setQuantity("");
+      setNotes("");
       loadRecent();
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Manual log submission failed.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const canSubmit = empId && productId && room && rack && !submitting;
+  const canSubmit = empId && productId && room && rack && quantity && !submitting;
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-fadeIn">
-      <div className="xl:col-span-2 card p-8 flex flex-col gap-4">
-        <h3 className="font-semibold text-ink">New Stock Placement</h3>
-        <p className="text-sm text-muted -mt-2">
-          Record new stock arriving and which room/rack it's being sent to — no scan required.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-          <label className="text-sm font-medium text-ink">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-soft flex flex-col gap-4">
+        <h3 className="font-semibold text-slate-800 text-sm">New Stock Placement</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label className="text-xs font-semibold text-slate-700">
             Logged By (Employee)
-            <select value={empId} onChange={(e) => setEmpId(e.target.value)} className="input-field mt-1.5">
-              <option value="">Select employee</option>
+            <select value={empId} onChange={(e) => setEmpId(e.target.value)} className="input-field mt-1.5 bg-white">
+              <option value="">Select employee...</option>
               {employees.map((e) => (
                 <option key={e.emp_id} value={e.emp_id}>
-                  {e.name} — {e.department}
+                  {e.name} ({e.emp_id})
                 </option>
               ))}
             </select>
           </label>
 
-          <label className="text-sm font-medium text-ink">
+          <label className="text-xs font-semibold text-slate-700">
             Product
-            <select value={productId} onChange={(e) => setProductId(e.target.value)} className="input-field mt-1.5">
-              <option value="">Select product</option>
+            <select value={productId} onChange={(e) => setProductId(e.target.value)} className="input-field mt-1.5 bg-white">
+              <option value="">Select product...</option>
               {products.map((p) => (
                 <option key={p.product_id} value={p.product_id}>
                   {p.name} ({p.product_id})
@@ -336,43 +584,41 @@ function ManualEntryTab() {
               ))}
             </select>
           </label>
+        </div>
 
-          <label className="text-sm font-medium text-ink">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label className="text-xs font-semibold text-slate-700">
             Floor / Room
-            <select value={room} onChange={(e) => setRoom(e.target.value)} className="input-field mt-1.5">
-              <option value="">Select room</option>
+            <select value={room} onChange={(e) => setRoom(e.target.value)} className="input-field mt-1.5 bg-white">
+              <option value="">Select room...</option>
               {ROOMS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
+                <option key={r} value={r}>{r}</option>
               ))}
             </select>
           </label>
 
-          <label className="text-sm font-medium text-ink">
+          <label className="text-xs font-semibold text-slate-700">
             Rack
-            <select value={rack} onChange={(e) => setRack(e.target.value)} className="input-field mt-1.5">
-              <option value="">Select rack</option>
+            <select value={rack} onChange={(e) => setRack(e.target.value)} className="input-field mt-1.5 bg-white">
+              <option value="">Select rack...</option>
               {RACKS.map((r) => (
-                <option key={r} value={r}>
-                  Rack {r}
-                </option>
+                <option key={r} value={r}>Rack {r}</option>
               ))}
             </select>
           </label>
+        </div>
 
-          <label className="text-sm font-medium text-ink">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label className="text-xs font-semibold text-slate-700">
             Action
-            <select value={action} onChange={(e) => setAction(e.target.value)} className="input-field mt-1.5">
+            <select value={action} onChange={(e) => setAction(e.target.value)} className="input-field mt-1.5 bg-white">
               {ACTIONS.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
+                <option key={a} value={a}>{a}</option>
               ))}
             </select>
           </label>
 
-          <label className="text-sm font-medium text-ink">
+          <label className="text-xs font-semibold text-slate-700">
             Quantity
             <input
               type="number"
@@ -385,120 +631,43 @@ function ManualEntryTab() {
           </label>
         </div>
 
-        <label className="text-sm font-medium text-ink">
+        <label className="text-xs font-semibold text-slate-700">
           Notes (optional)
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. New shipment from supplier, box #4"
+            placeholder="e.g. New shipment from supplier"
             rows={3}
-            className="input-field mt-1.5 resize-none"
+            className="input-field mt-1.5 resize-none bg-white"
           />
         </label>
 
         <button
           onClick={submit}
           disabled={!canSubmit}
-          className="btn-primary ripple flex items-center justify-center gap-2 mt-2 py-3"
+          className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg transition-all shadow-soft flex items-center justify-center gap-2 mt-2"
         >
-          {submitting ? <Loader2 size={18} className="animate-spin" /> : <ClipboardPlus size={18} />}
-          {submitting ? "Logging…" : "Log Entry"}
+          {submitting ? "Logging..." : "Log Entry"}
         </button>
 
-        {error && <p className="text-sm text-danger text-center">{error}</p>}
-        {success && <p className="text-sm text-success text-center">{success}</p>}
+        {error && <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg font-medium">{error}</div>}
+        {success && <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs rounded-lg font-medium">{success}</div>}
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-ink mb-4">Recent Manual Entries</h3>
-        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-soft">
+        <h3 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2 mb-3">Recent Manual Entries</h3>
+        <ul className="flex flex-col gap-3">
           {recent.map((r, i) => (
-            <li key={i} className="py-2.5 text-sm flex flex-col gap-0.5">
-              <div className="flex items-center justify-between">
-                <span className="text-ink font-medium">{r.product_name}</span>
-                <Badge tone="info">{r.action}</Badge>
+            <li key={i} className="text-xs flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-slate-800">{r.product_name}</span>
+                <span className="text-[9px] font-bold px-2 py-0.5 border border-blue-100 bg-blue-50 text-blue-600 rounded-full leading-none uppercase">{r.action}</span>
               </div>
-              <span className="text-xs text-muted">
-                {r.room} · Rack {r.rack} · {r.employee_name} · {r.entry_time}
-              </span>
-            </li>
-          ))}
-          {recent.length === 0 && <li className="py-2.5 text-sm text-muted">No manual entries logged today.</li>}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function HistoryTab() {
-  const [transactions, setTransactions] = useState([]);
-  const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    const refresh = () => {
-      const query = status ? `?status=${status}&limit=200` : "?limit=200";
-      api.get(`/history${query}`).then(setTransactions).catch(() => {});
-    };
-    refresh();
-    const poll = setInterval(refresh, 3000);
-    return () => clearInterval(poll);
-  }, [status]);
-
-  return (
-    <div className="flex flex-col gap-6 animate-fadeIn">
-      <div className="flex justify-end">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="input-field w-auto">
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s ? s.replace(/_/g, " ") : "All Statuses"}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="card p-6">
-        <ul className="flex flex-col">
-          {transactions.map((t, i) => (
-            <li key={t.id} className="flex gap-4 pb-6 last:pb-0">
-              <div className="flex flex-col items-center">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{
-                    backgroundColor:
-                      { success: "#22C55E", danger: "#EF4444", warning: "#F59E0B", info: "#3B82F6", violet: "#8B5CF6", neutral: "#9CA3AF" }[
-                        STATUS_TONE[t.verification_status] || "neutral"
-                      ],
-                  }}
-                />
-                {i !== transactions.length - 1 && <span className="w-px flex-1 bg-hairline/[0.06] mt-1" />}
-              </div>
-
-              <div className="flex-1 pb-1">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-ink">Transaction #{t.id}</span>
-                    <Badge tone={STATUS_TONE[t.verification_status] || "neutral"}>
-                      {t.verification_status.replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  <span className="text-xs text-muted">{new Date(t.timestamp).toLocaleString()}</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2 text-xs text-muted">
-                  <span>Worker #{t.worker_id}</span>
-                  <span>Product #{t.product_id}</span>
-                  <span>Expected {t.expected_quantity}</span>
-                  <span>Detected {t.detected_quantity}</span>
-                </div>
-
-                <div className="mt-3 max-w-xs flex items-center gap-2">
-                  <ProgressBar value={t.confidence_score * 100} max={100} tone="primary" height="h-1.5" />
-                  <span className="text-xs text-muted whitespace-nowrap">{(t.confidence_score * 100).toFixed(0)}%</span>
-                </div>
+              <div className="text-[10px] text-slate-400">
+                {r.room} · Rack {r.rack} · {r.employee_name}
               </div>
             </li>
           ))}
-          {transactions.length === 0 && <li className="text-sm text-muted py-8 text-center">No records found.</li>}
         </ul>
       </div>
     </div>

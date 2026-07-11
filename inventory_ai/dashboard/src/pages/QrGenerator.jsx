@@ -102,19 +102,19 @@ export default function QrGenerator() {
     <div className="flex flex-col gap-6">
       <PageHeader title="QR Generator" subtitle="Create product QR codes for stock movement" />
 
-      <div className="inline-flex self-start rounded-xl bg-hairline/[0.05] p-1">
+      <div className="flex gap-2 border-b border-hairline/10 mb-5 overflow-x-auto w-full">
         <button
           onClick={() => setMode("catalog")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            mode === "catalog" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+          className={`flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 bg-transparent transition-all hover:text-ink ${
+            mode === "catalog" ? "border-primary text-primary font-semibold" : "border-transparent text-muted"
           }`}
         >
           From Catalog
         </button>
         <button
           onClick={() => setMode("manual")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            mode === "manual" ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+          className={`flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 bg-transparent transition-all hover:text-ink ${
+            mode === "manual" ? "border-primary text-primary font-semibold" : "border-transparent text-muted"
           }`}
         >
           Manual Entry

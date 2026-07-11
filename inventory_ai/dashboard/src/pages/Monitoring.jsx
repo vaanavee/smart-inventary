@@ -26,15 +26,18 @@ export default function Monitoring() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Monitoring" subtitle="CCTV, employee tracking, stock, and product guidance in one place" />
 
-      <div className="inline-flex flex-wrap rounded-xl bg-hairline/[0.05] p-1 gap-1 w-fit">
+      <div className="flex gap-2 border-b border-hairline/10 mb-5 overflow-x-auto w-full">
         {TABS.map((t) => {
           const Icon = t.icon;
+          const active = tab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                tab === t.id ? "bg-surface-alt text-ink shadow-soft" : "text-muted"
+              className={`flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 bg-transparent transition-all hover:text-ink ${
+                active
+                  ? "border-primary text-primary font-semibold"
+                  : "border-transparent text-muted"
               }`}
             >
               <Icon size={15} /> {t.label}

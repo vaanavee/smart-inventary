@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employees · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>.emp-name{display:flex;align-items:center;gap:10px}</style>
+</head>
+<body data-module="employees" data-page="Employees">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>People<span class="sep">/</span>Employees</div>
+<div class="page-header">
+  <div><h1>Employees</h1><div class="subtitle">6 registered · each mapped to a physical RFID card number</div></div>
+  <div class="flex">
+    <button class="btn" data-action="export">⬇ Export CSV</button>
+    <button class="btn btn-primary" data-modal-open="addModal">+ Add Employee</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="input search-input" placeholder="Search by name or ID…">
+  <div class="flex" style="gap:6px"><span class="chip active">All</span><span class="chip">Active</span><span class="chip">Inactive</span></div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Directory</h2><span class="badge badge-neutral">6 of 6</span></div>
+  <div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Employee</th><th>Emp ID</th><th>RFID Card</th><th>Role</th><th>Home Room</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">VN</span> Vishali Nair</div></td>
+          <td class="mono">EMP-101</td><td class="mono">4E500E06</td><td>Picker</td><td class="text-2">Room 1</td>
+          <td><span class="badge badge-success">● Active</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">SM</span> Suraj Menon</div></td>
+          <td class="mono">EMP-102</td><td class="mono">CC392B1F</td><td>Picker</td><td class="text-2">Room 2</td>
+          <td><span class="badge badge-success">● Active</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">VK</span> Vishal Kumar</div></td>
+          <td class="mono">EMP-103</td><td class="mono">B3122A22</td><td>Loader</td><td class="text-2">Room 1</td>
+          <td><span class="badge badge-success">● Active</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">VR</span> Vaanavee R.</div></td>
+          <td class="mono">EMP-104</td><td class="mono">0EB46F06</td><td>Supervisor</td><td class="text-2">Room 3</td>
+          <td><span class="badge badge-success">● Active</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">AD</span> Arjun Das</div></td>
+          <td class="mono">EMP-105</td><td class="mono">7A2F1C09</td><td>Picker</td><td class="text-2">Room 2</td>
+          <td><span class="badge badge-success">● Active</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td><div class="emp-name"><span class="avatar sm">MI</span> Meena Iyer</div></td>
+          <td class="mono">EMP-106</td><td class="mono">1B9E4D22</td><td>Picker</td><td class="text-2">Room 3</td>
+          <td><span class="badge badge-neutral">○ Inactive</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="detail.html">View</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<!-- Add employee modal -->
+<div class="modal-overlay" id="addModal"><div class="modal">
+  <div class="modal-header"><h3>Add Employee</h3><button class="modal-close" data-modal-close>✕</button></div>
+  <div class="modal-body">
+    <div class="alert alert-info mb-3">ℹ️ <div>Mockup form — nothing is saved. Map the employee to their physical RFID card so door taps identify them.</div></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">Full Name</label><input class="input" placeholder="e.g. Ravi Shankar"></div>
+      <div class="form-group"><label class="required">Employee ID</label><input class="input" placeholder="EMP-107"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">RFID Card Number</label><input class="input" placeholder="e.g. 4E500E06"><div class="field-hint">Tap the card on any reader to auto-fill.</div></div>
+      <div class="form-group"><label>Department / Role</label><select class="select"><option>Picker</option><option>Loader</option><option>Supervisor</option></select></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Home Room</label><select class="select"><option>Room 1</option><option>Room 2</option><option>Room 3</option></select></div>
+      <div class="form-group"><label>Status</label><select class="select"><option>Active</option><option>Inactive</option></select></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" data-modal-close>Cancel</button><button class="btn btn-primary" data-modal-close>Save Employee</button></div>
+</div></div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

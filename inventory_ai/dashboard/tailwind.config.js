@@ -5,38 +5,39 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Sora", "Inter", "system-ui", "sans-serif"],
       },
       colors: {
         primary: {
-          DEFAULT: "#FF6B00",
-          light: "#FF8A3D",
-          dark: "#E05F00",
+          DEFAULT: "#4f46e5",
+          light: "#6366f1",
+          dark: "#4338ca",
         },
         surface: "rgb(var(--color-surface) / <alpha-value>)",
         "surface-alt": "rgb(var(--color-surface-alt) / <alpha-value>)",
         ink: "rgb(var(--color-ink) / <alpha-value>)",
         muted: "rgb(var(--color-muted) / <alpha-value>)",
         hairline: "rgb(var(--color-hairline) / <alpha-value>)",
-        success: "#22C55E",
-        warning: "#F59E0B",
-        danger: "#EF4444",
-        info: "#3B82F6",
-        violet: "#8B5CF6",
+        success: "#16a34a",
+        warning: "#d97706",
+        danger: "#dc2626",
+        info: "#0284c7",
+        violet: "#7c3aed",
       },
       borderRadius: {
-        xl: "18px",
-        "2xl": "22px",
+        xl: "12px",
+        "2xl": "14px",
       },
       boxShadow: {
-        soft: "0 2px 8px rgba(26, 26, 26, 0.04), 0 8px 24px rgba(26, 26, 26, 0.06)",
-        lift: "0 12px 32px rgba(255, 107, 0, 0.14), 0 4px 12px rgba(26, 26, 26, 0.06)",
-        glow: "0 0 0 1px rgba(255,107,0,0.25), 0 0 24px rgba(255,107,0,0.35)",
+        soft: "0 1px 2px rgba(15, 23, 42, .06)",
+        lift: "0 10px 25px -5px rgba(15, 23, 42, .15)",
+        glow: "0 0 0 1px rgba(79,70,229,0.25), 0 0 24px rgba(79,70,229,0.3)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #FF6B00 0%, #FF8A3D 100%)",
+        "gradient-primary": "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
         "gradient-radial-soft":
-          "radial-gradient(120% 120% at 0% 0%, rgba(255,107,0,0.08) 0%, rgba(255,107,0,0) 60%)",
+          "radial-gradient(120% 120% at 0% 0%, rgba(79,70,229,0.06) 0%, rgba(79,70,229,0) 60%)",
       },
       keyframes: {
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
@@ -49,8 +50,8 @@ export default {
           "100%": { transform: "translateY(100%)" },
         },
         pulseGlow: {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(255,107,0,0.35)" },
-          "50%": { boxShadow: "0 0 0 8px rgba(255,107,0,0)" },
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(79,70,229,0.35)" },
+          "50%": { boxShadow: "0 0 0 8px rgba(79,70,229,0)" },
         },
       },
       animation: {

@@ -1,0 +1,63 @@
+/* ============================================================
+   SMS Mockups — Platform Console identity (Super Admin)
+   Loaded ONLY by 00-platform pages, after the base stylesheets.
+   Flips the accent to iris-violet and darkens the chrome so the
+   control plane reads as "above the schools".
+   ============================================================ */
+
+body.platform {
+  --primary: #7c3aed;
+  --primary-600: #6d28d9;
+  --primary-100: #ede9fe;
+  --primary-50: #f5f3ff;
+  --sidebar-bg: #09090f;
+  --sidebar-active-bg: #1c1730;
+}
+
+/* Sidebar: violet glow brand + gradient edge */
+body.platform .sidebar { background: linear-gradient(180deg, #09090f 0%, #120d22 100%); border-right: 1px solid #241b3d; }
+body.platform .sidebar .brand { border-bottom: 1px solid #241b3d; }
+body.platform .sidebar .brand .logo {
+  background: linear-gradient(135deg, #7c3aed, #c026d3);
+  box-shadow: 0 0 18px rgba(124, 58, 237, .45);
+}
+body.platform .sidebar .nav-item.active { box-shadow: inset 2px 0 0 #a78bfa; }
+body.platform .sidebar .nav-section-title { color: #4c4368; }
+body.platform .sidebar .sidebar-footer { border-top: 1px solid #241b3d; color: #4c4368; }
+
+/* Topbar: environment chip */
+.env-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 11px; border-radius: var(--radius-full);
+  font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+  background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;
+}
+.env-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+
+/* Tenant health dots & lifecycle steppers reused across console pages */
+.health { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; }
+.health::before { content: ""; width: 9px; height: 9px; border-radius: 50%; }
+.health.good::before { background: var(--success); box-shadow: 0 0 6px rgba(22,163,74,.5); }
+.health.warn::before { background: var(--warning); box-shadow: 0 0 6px rgba(217,119,6,.5); }
+.health.bad::before  { background: var(--danger);  box-shadow: 0 0 6px rgba(220,38,38,.5); }
+.health.off::before  { background: var(--text-3); }
+
+/* Lifecycle stepper */
+.lifecycle { display: flex; align-items: center; gap: 0; font-size: .78rem; }
+.lifecycle .step { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text-3); }
+.lifecycle .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.lifecycle .step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.lifecycle .step + .step { border-left: none; }
+.lifecycle .step.done { color: var(--success); font-weight: 600; }
+.lifecycle .step.current { background: var(--primary-50); color: var(--primary); border-color: var(--primary-100); font-weight: 700; }
+
+/* Plan cards */
+.plan-card { position: relative; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); padding: 20px; }
+.plan-card.featured { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-100); }
+.plan-card .plan-price { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; }
+.plan-card ul { list-style: none; margin-top: 12px; }
+.plan-card ul li { padding: 5px 0; font-size: .84rem; color: var(--text-2); }
+.plan-card ul li::before { content: "✓ "; color: var(--primary); font-weight: 700; }
+
+/* Hash-chain audit rows */
+.hash-chip { font-family: ui-monospace, monospace; font-size: .68rem; color: var(--text-3); background: var(--bg); border: 1px solid var(--border); padding: 1px 7px; border-radius: 4px; }

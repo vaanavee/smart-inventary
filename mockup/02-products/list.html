@@ -1,0 +1,117 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body data-module="products" data-page="Products">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Inventory<span class="sep">/</span>Products</div>
+<div class="page-header">
+  <div><h1>Products</h1><div class="subtitle">248 products across 3 rooms · low-stock threshold 50 units</div></div>
+  <div class="flex">
+    <button class="btn" data-action="export">⬇ Export CSV</button>
+    <button class="btn btn-primary" data-modal-open="addModal">+ Add Product</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="input search-input" placeholder="Search by name or SKU…">
+  <div class="flex" style="gap:6px">
+    <span class="chip active">All</span><span class="chip">Fasteners</span><span class="chip">Power Tools</span><span class="chip">Electricals</span>
+  </div>
+  <span class="flex-1"></span>
+  <span class="chip">Low stock only</span>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Catalog</h2><span class="badge badge-neutral">8 of 248</span></div>
+  <div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Location</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Bosch GSB 12V Cordless Drill</td><td class="mono">PRD-0412</td><td>Power Tools</td>
+          <td class="text-2">Room 2 · Rack A</td><td class="mono">34 pcs</td>
+          <td><span class="badge badge-warning">● Low</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>M8 Hex Bolts (Box of 100)</td><td class="mono">PRD-0188</td><td>Fasteners</td>
+          <td class="text-2">Room 1 · Rack B</td><td class="mono">240 pcs</td>
+          <td><span class="badge badge-success">● OK</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>2.5mm² Copper Wire Spool</td><td class="mono">PRD-0207</td><td>Electricals</td>
+          <td class="text-2">Room 3 · Rack C</td><td class="mono">42 rolls</td>
+          <td><span class="badge badge-warning">● Low</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>Makita Angle Grinder</td><td class="mono">PRD-0355</td><td>Power Tools</td>
+          <td class="text-2">Room 2 · Rack B</td><td class="mono">18 pcs</td>
+          <td><span class="badge badge-danger">● Critical</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>PVC Conduit Pipe 25mm</td><td class="mono">PRD-0421</td><td>Electricals</td>
+          <td class="text-2">Room 3 · Rack A</td><td class="mono">610 pcs</td>
+          <td><span class="badge badge-success">● OK</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>Stainless Washers M8</td><td class="mono">PRD-0509</td><td>Fasteners</td>
+          <td class="text-2">Room 1 · Rack A</td><td class="mono">1,180 pcs</td>
+          <td><span class="badge badge-success">● OK</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>LED Panel 18W</td><td class="mono">PRD-0533</td><td>Electricals</td>
+          <td class="text-2">Room 3 · Rack D</td><td class="mono">27 pcs</td>
+          <td><span class="badge badge-warning">● Low</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+        <tr>
+          <td>Cordless Impact Driver</td><td class="mono">PRD-0560</td><td>Power Tools</td>
+          <td class="text-2">Room 2 · Rack C</td><td class="mono">9 pcs</td>
+          <td><span class="badge badge-danger">● Critical</span></td>
+          <td class="text-right"><a class="btn btn-sm btn-ghost" href="qr.html">QR</a><button class="btn btn-sm" data-action="edit">Edit</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination"><span>Showing 1–8 of 248</span>
+      <button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button></div>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<!-- Add product modal -->
+<div class="modal-overlay" id="addModal"><div class="modal modal-lg">
+  <div class="modal-header"><h3>Add Product</h3><button class="modal-close" data-modal-close>✕</button></div>
+  <div class="modal-body">
+    <div class="alert alert-info mb-3">ℹ️ <div>Mockup form — submitting simulates the action; nothing is saved. A QR code is generated automatically on save.</div></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">Product Name</label><input class="input" placeholder="e.g. Bosch GSB 12V Drill"></div>
+      <div class="form-group"><label class="required">SKU / Product ID</label><input class="input" placeholder="PRD-0000"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label class="required">Category</label><select class="select"><option>Fasteners</option><option>Power Tools</option><option>Electricals</option></select></div>
+      <div class="form-group"><label>Unit</label><select class="select"><option>pcs</option><option>rolls</option><option>box</option><option>m</option></select></div>
+    </div>
+    <div class="grid-3">
+      <div class="form-group"><label class="required">Room</label><select class="select"><option>Room 1 · Fasteners</option><option>Room 2 · Power Tools</option><option>Room 3 · Electricals</option></select></div>
+      <div class="form-group"><label class="required">Rack</label><select class="select"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div>
+      <div class="form-group"><label class="required">Opening Stock</label><input class="input" type="number" placeholder="0"></div>
+    </div>
+    <div class="field-hint">Products below 50 units are flagged as low-stock automatically.</div>
+  </div>
+  <div class="modal-footer"><button class="btn" data-modal-close>Cancel</button><button class="btn btn-primary" data-modal-close>Save &amp; generate QR</button></div>
+</div></div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

@@ -61,9 +61,9 @@ export default function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-10 h-20 px-8 flex items-center justify-between bg-surface-alt/70 backdrop-blur-xl border-b border-hairline/[0.06]">
+    <header className="sticky top-0 z-10 h-[58px] px-6 flex items-center justify-between bg-surface-alt border-b border-hairline/10">
       <div>
-        <h2 className="text-lg font-semibold text-ink">
+        <h2 className="text-sm font-semibold text-ink">
           {greetingForHour(now.getHours())}, {firstName} <span className="ml-0.5">👋</span>
         </h2>
         <p className="text-xs text-muted mt-0.5">
@@ -71,21 +71,21 @@ export default function Topbar() {
         </p>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <div className="relative hidden md:block">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             placeholder="Search products, boxes, workers…"
-            className="w-72 bg-hairline/[0.03] border border-hairline/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-surface-alt transition-all"
+            className="w-64 bg-surface border border-hairline/15 rounded-full pl-9 pr-4 py-1.5 text-[13px] text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/25 focus:bg-surface-alt transition-all"
           />
         </div>
 
         <button
           onClick={toggleTheme}
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="w-10 h-10 rounded-xl bg-hairline/[0.03] hover:bg-hairline/[0.06] flex items-center justify-center transition-colors"
+          className="w-9 h-9 rounded-full hover:bg-surface flex items-center justify-center transition-colors text-muted"
         >
-          {theme === "dark" ? <Sun size={18} className="text-ink" /> : <Moon size={18} className="text-ink" />}
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
         </button>
 
         {/* Notifications */}
@@ -93,19 +93,19 @@ export default function Topbar() {
           <button
             onClick={() => setBellOpen((o) => !o)}
             title="Notifications"
-            className="relative w-10 h-10 rounded-xl bg-hairline/[0.03] hover:bg-hairline/[0.06] flex items-center justify-center transition-colors"
+            className="relative w-9 h-9 rounded-full hover:bg-surface flex items-center justify-center transition-colors text-muted"
           >
-            <Bell size={18} className="text-ink" />
+            <Bell size={17} />
             {unread > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-semibold flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-danger text-white text-[10px] font-semibold flex items-center justify-center border-2 border-surface-alt">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
           </button>
 
           {bellOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-xl bg-surface-alt border border-hairline/[0.08] shadow-lift z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-hairline/[0.06]">
+            <div className="absolute right-0 mt-2 w-80 rounded-xl bg-surface-alt border border-hairline/10 shadow-lift z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-hairline/10">
                 <p className="text-sm font-semibold text-ink">Notifications</p>
                 {unread > 0 && (
                   <button
@@ -155,14 +155,14 @@ export default function Topbar() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-semibold text-sm cursor-pointer shadow-soft"
+            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm cursor-pointer"
           >
             {firstName.charAt(0).toUpperCase()}
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface-alt border border-hairline/[0.08] shadow-lift z-50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-hairline/[0.06]">
+            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface-alt border border-hairline/10 shadow-lift z-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-hairline/10">
                 <p className="text-sm font-medium text-ink truncate">{displayName}</p>
                 <p className="text-xs text-muted">{roleLabel}</p>
               </div>

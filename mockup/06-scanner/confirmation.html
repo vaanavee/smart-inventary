@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .wizard { display:flex; gap:8px; margin-bottom:22px; }
+  .wstep { display:flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--border); border-radius:999px; font-size:.82rem; color:var(--text-3); background:var(--surface); }
+  .wstep .num { width:20px; height:20px; border-radius:50%; background:var(--border); color:var(--text-2); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; }
+  .wstep.done { border-color:var(--success-border); color:var(--success); }
+  .wstep.done .num { background:var(--success); color:#fff; }
+  .success-hero { text-align:center; padding:20px 0 10px; }
+  .success-ring { width:76px; height:76px; border-radius:50%; background:var(--success-bg); border:2px solid var(--success-border); color:var(--success); display:flex; align-items:center; justify-content:center; font-size:2.2rem; margin:0 auto 14px; }
+  .kv { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); font-size:.9rem; }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--text-3); }
+  .kv .v { font-weight:600; }
+  .match-cell { display:flex; gap:6px; }
+  .mb { font-size:.72rem; font-weight:700; padding:2px 9px; border-radius:999px; border:1px solid; }
+  .mb.ok { background:var(--success-bg); color:var(--success); border-color:var(--success-border); }
+</style>
+</head>
+<body data-module="scanner" data-page="Confirmation">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Operations<span class="sep">/</span><a href="scan.html">QR Scanner</a><span class="sep">/</span>Confirmation</div>
+
+<div class="wizard">
+  <div class="wstep done"><span class="num">✓</span> Scan</div>
+  <div class="wstep done"><span class="num">✓</span> Update Movement</div>
+  <div class="wstep done"><span class="num">✓</span> Confirm</div>
+</div>
+
+<div class="card" style="max-width:640px;margin:0 auto;"><div class="card-body">
+  <div class="success-hero">
+    <div class="success-ring">✓</div>
+    <h1>Movement recorded</h1>
+    <div class="subtitle">Logged &amp; cross-checked · Reference <span class="mono">MOV-004824</span></div>
+  </div>
+
+  <div class="mt-3">
+    <div class="kv"><span class="k">Product</span><span class="v">Bosch GSB 12V Drill · PRD-0412</span></div>
+    <div class="kv"><span class="k">Movement</span><span class="v"><span class="badge badge-danger">OUT ×3</span></span></div>
+    <div class="kv"><span class="k">From → To</span><span class="v">Room 2 · Rack A → Dispatch</span></div>
+    <div class="kv"><span class="k">Recorded by</span><span class="v">Vishali Nair · EMP-101</span></div>
+    <div class="kv"><span class="k">Time</span><span class="v mono">10 Jul 2026 · 09:52</span></div>
+    <div class="kv"><span class="k">New stock level</span><span class="v">31 pcs <span class="badge badge-warning">Low</span></span></div>
+    <div class="kv"><span class="k">Cross-check</span><span class="v"><div class="match-cell"><span class="mb ok">RFID ✓</span><span class="mb ok">QR ✓</span><span class="mb ok">CCTV ✓</span></div></span></div>
+  </div>
+
+  <div class="alert alert-success mt-3">✓ <div>All three signals matched — Vishali tapped the Room 2 reader at 09:51, scanned the QR at 09:52, and was identified on camera. Movement is <strong>Verified</strong>.</div></div>
+
+  <div class="flex mt-4" style="justify-content:center;">
+    <a class="btn btn-primary btn-lg" href="scan.html">＋ Scan another</a>
+    <a class="btn btn-lg" href="../09-reports/movement-report.html">View in report</a>
+  </div>
+</div></div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCTV Monitoring · WisRight Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<style>
+  .cam-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .cam { border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow-sm); }
+  .cam-feed { position:relative; aspect-ratio:16/10; background:linear-gradient(160deg,#334155,#0f172a); overflow:hidden; }
+  .cam-feed .grain { position:absolute; inset:0; opacity:.12; background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px); }
+  .live-dot { position:absolute; top:10px; left:10px; display:flex; align-items:center; gap:6px; background:rgba(0,0,0,.5); color:#fff; font-size:.68rem; font-weight:700; padding:3px 8px; border-radius:999px; }
+  .live-dot .d { width:7px; height:7px; border-radius:50%; background:#ef4444; }
+  .cam-time { position:absolute; top:10px; right:10px; color:#e2e8f0; font-size:.68rem; font-family:ui-monospace,monospace; background:rgba(0,0,0,.4); padding:2px 7px; border-radius:5px; }
+  .bbox { position:absolute; border:2px solid; border-radius:4px; }
+  .bbox .tag { position:absolute; top:-19px; left:-2px; font-size:.62rem; font-weight:700; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; color:#fff; }
+  .bbox.ok { border-color:#4ade80; } .bbox.ok .tag { background:#16a34a; }
+  .bbox.unknown { border-color:#f87171; } .bbox.unknown .tag { background:#dc2626; }
+  .cam-foot { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; }
+  .cam-foot .rm { font-weight:700; font-size:.9rem; }
+  .cam-foot .info { font-size:.74rem; color:var(--text-3); }
+  .offline { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; color:#64748b; }
+  @media (max-width:1000px){ .cam-grid { grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .cam-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body data-module="cctv" data-page="CCTV Monitoring">
+
+<div class="breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span>Monitoring<span class="sep">/</span>CCTV Monitoring</div>
+<div class="page-header">
+  <div><h1>CCTV Monitoring</h1><div class="subtitle">Per-room cameras · fallback identity check for anyone who didn't tap RFID</div></div>
+  <div class="flex">
+    <span class="chip active">All rooms</span><span class="chip">Alerts only</span>
+  </div>
+</div>
+
+<div class="stat-strip mb-4">
+  <div class="stat"><div class="v">3</div><div class="l">Cameras</div></div>
+  <div class="stat"><div class="v text-success">2</div><div class="l">People identified</div></div>
+  <div class="stat"><div class="v text-danger">1</div><div class="l">Unknown person</div></div>
+  <div class="stat"><div class="v">2/3</div><div class="l">Feeds online</div></div>
+</div>
+
+<div class="cam-grid">
+  <!-- Room 1 -->
+  <div class="cam">
+    <div class="cam-feed">
+      <div class="grain"></div>
+      <span class="live-dot"><span class="d"></span> LIVE</span><span class="cam-time">10 Jul 09:52:14</span>
+      <div class="bbox ok" style="top:34%;left:40%;width:26%;height:46%"><span class="tag">Vishali Nair · RFID ✓</span></div>
+    </div>
+    <div class="cam-foot"><div><div class="rm">Room 1 · Fasteners</div><div class="info">1 person · all identified</div></div><span class="badge badge-success">● Clear</span></div>
+  </div>
+
+  <!-- Room 2 — unknown person alert -->
+  <div class="cam" style="border-color:var(--danger-border)">
+    <div class="cam-feed">
+      <div class="grain"></div>
+      <span class="live-dot"><span class="d"></span> LIVE</span><span class="cam-time">10 Jul 09:52:14</span>
+      <div class="bbox ok" style="top:30%;left:16%;width:24%;height:52%"><span class="tag">Arjun Das · RFID ✓</span></div>
+      <div class="bbox unknown" style="top:38%;left:58%;width:24%;height:48%"><span class="tag">Unknown · no RFID tap</span></div>
+    </div>
+    <div class="cam-foot"><div><div class="rm">Room 2 · Power Tools</div><div class="info">2 people · 1 unidentified</div></div><span class="badge badge-danger">● Alert</span></div>
+  </div>
+
+  <!-- Room 3 — offline -->
+  <div class="cam">
+    <div class="cam-feed">
+      <div class="grain"></div>
+      <span class="cam-time">—</span>
+      <div class="offline">📷<span style="font-size:.8rem">Reader ESP-D03 offline</span><span style="font-size:.7rem">CCTV fallback active</span></div>
+    </div>
+    <div class="cam-foot"><div><div class="rm">Room 3 · Electricals</div><div class="info">No door reader heartbeat · 12m</div></div><span class="badge badge-warning">● Degraded</span></div>
+  </div>
+</div>
+
+<!-- Alert detail -->
+<div class="card mt-4">
+  <div class="card-header"><h2>Open Alert · Room 2</h2><span class="badge badge-danger">● Unresolved</span></div>
+  <div class="card-body">
+    <div class="alert alert-danger mb-3">🎥 <div>A person was detected in <strong>Room 2</strong> at <strong>09:47</strong> with <strong>no matching RFID tap</strong>. In the same window a QR movement (Copper Wire, PRD-0207, OUT ×5) was recorded — flagged for reconciliation.</div></div>
+    <div class="flex">
+      <button class="btn" data-action="toast" data-msg="Snapshot saved to evidence (mockup)">📸 Save snapshot</button>
+      <a class="btn" href="../05-employees/list.html">Assign identity</a>
+      <a class="btn btn-primary" href="../08-attendance/match.html">Open reconciliation</a>
+    </div>
+  </div>
+</div>
+
+<div class="muted mt-4" style="text-align:center;font-size:.78rem;">Static mockup, no real data · Simulated camera feeds · Not a real application.</div>
+
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/ui.js"></script>
+</body></html>
