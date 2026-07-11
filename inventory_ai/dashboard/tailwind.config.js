@@ -10,9 +10,9 @@ export default {
       },
       colors: {
         primary: {
-          DEFAULT: "#4f46e5",
-          light: "#6366f1",
-          dark: "#4338ca",
+          DEFAULT: "#ea580c",
+          light: "#f97316",
+          dark: "#c2410c",
         },
         surface: "rgb(var(--color-surface) / <alpha-value>)",
         "surface-alt": "rgb(var(--color-surface-alt) / <alpha-value>)",
@@ -32,12 +32,12 @@ export default {
       boxShadow: {
         soft: "0 1px 2px rgba(15, 23, 42, .06)",
         lift: "0 10px 25px -5px rgba(15, 23, 42, .15)",
-        glow: "0 0 0 1px rgba(79,70,229,0.25), 0 0 24px rgba(79,70,229,0.3)",
+        glow: "0 0 0 1px rgba(234,88,12,0.25), 0 0 24px rgba(234,88,12,0.3)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+        "gradient-primary": "linear-gradient(135deg, #ea580c 0%, #f97316 100%)",
         "gradient-radial-soft":
-          "radial-gradient(120% 120% at 0% 0%, rgba(79,70,229,0.06) 0%, rgba(79,70,229,0) 60%)",
+          "radial-gradient(120% 120% at 0% 0%, rgba(234,88,12,0.06) 0%, rgba(234,88,12,0) 60%)",
       },
       keyframes: {
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
@@ -50,8 +50,8 @@ export default {
           "100%": { transform: "translateY(100%)" },
         },
         pulseGlow: {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(79,70,229,0.35)" },
-          "50%": { boxShadow: "0 0 0 8px rgba(79,70,229,0)" },
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(234,88,12,0.35)" },
+          "50%": { boxShadow: "0 0 0 8px rgba(234,88,12,0)" },
         },
       },
       animation: {

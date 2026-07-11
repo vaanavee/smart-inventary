@@ -330,7 +330,7 @@ export default function Analytics() {
                 <span className="w-3 h-3 rounded bg-primary" /> IN
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-indigo-300" /> OUT
+                <span className="w-3 h-3 rounded bg-orange-300" /> OUT
               </span>
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function Analytics() {
                 <div
                   style={{ height: `${c.val}%` }}
                   className={`w-full max-w-[28px] rounded-t-md transition-all group-hover:opacity-90 ${
-                    c.isOut ? "bg-indigo-300" : "bg-primary"
+                    c.isOut ? "bg-orange-300" : "bg-primary"
                   }`}
                   title={`${c.val}%`}
                 />

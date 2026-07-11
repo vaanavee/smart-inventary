@@ -509,7 +509,7 @@ export default function QrScanner() {
 
                   <button
                     onClick={handleSimulateScan}
-                    className="px-4 py-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-orange-50 border border-orange-100 hover:bg-orange-100 text-orange-700 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5"
                   >
                     <Sparkles size={14} /> Simulate Scan (Bosch Drill)
                   </button>

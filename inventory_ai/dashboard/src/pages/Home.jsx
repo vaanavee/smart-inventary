@@ -420,7 +420,7 @@ export default function Home() {
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end min-w-0">
                     <div
                       className={`w-full max-w-[42px] rounded-t transition-all duration-500 ${
-                        idx < 2 ? "bg-primary opacity-85" : "bg-indigo-300"
+                        idx < 2 ? "bg-primary opacity-85" : "bg-orange-300"
                       }`}
                       style={{ height: `${heightPercent}%` }}
                     />
