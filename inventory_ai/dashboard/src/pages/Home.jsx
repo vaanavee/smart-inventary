@@ -6,44 +6,46 @@ import { api } from "../api/client.js";
 import { monitorApi } from "../api/monitorClient.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Box, Play, RefreshCw, Eye, CheckCircle2 } from "lucide-react";
+import { isMockPath } from "../utils/mock.js";
 
 export default function Home() {
   const { user } = useAuth();
   const isEmployee = user?.role === "employee";
+  const isMock = isMockPath();
 
   // State with mockup data fallbacks in case APIs are empty/offline
-  const [totalProducts, setTotalProducts] = useState(248);
-  const [currentEntries, setCurrentEntries] = useState([
+  const [totalProducts, setTotalProducts] = useState(isMock ? 248 : 0);
+  const [currentEntries, setCurrentEntries] = useState(isMock ? [
     { employee_name: "Vishali Nair", room: "Room 1", entry_time: "09:12" },
     { employee_name: "Arjun Das", room: "Room 2", entry_time: "09:41" }
-  ]);
-  const [workers, setWorkers] = useState([
+  ] : []);
+  const [workers, setWorkers] = useState(isMock ? [
     { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }
-  ]);
-  const [movements, setMovements] = useState([
+  ] : []);
+  const [movements, setMovements] = useState(isMock ? [
     { employee_name: "Vishali Nair", product_name: "Bosch GSB 12V Drill", product_id: "PRD-0412", action: "OUT", quantity: 3, room: "Room 2", rack: "A", entry_time: "09:14", source: "auto" },
     { employee_name: "Arjun Das", product_name: "Makita Angle Grinder", product_id: "PRD-0355", action: "TRANSFER", quantity: 2, room: "Room 2", rack: "B", entry_time: "09:41", source: "auto" },
     { employee_name: "— unresolved —", product_name: "2.5mm² Copper Wire", product_id: "PRD-0207", action: "OUT", quantity: 5, room: "Room 3", rack: "C", entry_time: "09:47", source: "unresolved" },
     { employee_name: "Vishal Kumar", product_name: "M8 Hex Bolts (Box)", product_id: "PRD-0188", action: "IN", quantity: 20, room: "Room 1", rack: "B", entry_time: "09:05", source: "auto" },
     { employee_name: "Vaanavee R.", product_name: "LED Panel 18W", product_id: "PRD-0533", action: "OUT", quantity: 6, room: "Room 3", rack: "D", entry_time: "08:58", source: "vision" }
-  ]);
-  const [lowStock, setLowStock] = useState([
+  ] : []);
+  const [lowStock, setLowStock] = useState(isMock ? [
     { name: "Cordless Impact Driver", product_id: "PRD-0560", room: "Room 2", rack: "C", current_stock: 9, minimum_stock: 50 },
     { name: "Makita Angle Grinder", product_id: "PRD-0355", room: "Room 2", rack: "B", current_stock: 18, minimum_stock: 50 },
     { name: "LED Panel 18W", product_id: "PRD-0533", room: "Room 3", rack: "D", current_stock: 27, minimum_stock: 50 },
     { name: "Bosch GSB 12V Drill", product_id: "PRD-0412", room: "Room 2", rack: "A", current_stock: 34, minimum_stock: 50 },
     { name: "2.5mm² Copper Wire", product_id: "PRD-0207", room: "Room 3", rack: "C", current_stock: 42, minimum_stock: 50 }
-  ]);
-  const [alerts, setAlerts] = useState([
+  ] : []);
+  const [alerts, setAlerts] = useState(isMock ? [
     { id: 1, severity: "critical", message: "CCTV detected a person in Room 2 at 09:47 with no matching RFID tap. A QR movement (PRD-0207) was recorded in the same window." }
-  ]);
-  const [topProducts, setTopProducts] = useState([
+  ] : []);
+  const [topProducts, setTopProducts] = useState(isMock ? [
     { product: "2.5mm² Copper Wire", count: 86 },
     { product: "LED Panel 18W", count: 70 },
     { product: "Bosch GSB 12V Drill", count: 54 },
     { product: "Makita Angle Grinder", count: 39 },
     { product: "M8 Hex Bolts (Box)", count: 30 }
-  ]);
+  ] : []);
 
   const [currentTime, setCurrentTime] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
