@@ -48,7 +48,6 @@ const SECTIONS = [
   {
     title: "MONITORING",
     links: [
-      { to: "/live", label: "CCTV Monitoring", icon: Video, adminOnly: true },
       { to: "/verification", label: "Attendance Match", icon: ScanLine },
     ]
   },
