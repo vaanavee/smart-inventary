@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
 import Topbar from "./components/Topbar.jsx";
 import Home from "./pages/Home.jsx";
-import LiveDetection from "./pages/LiveDetection.jsx";
+import Monitoring from "./pages/Monitoring.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import Verification from "./pages/Verification.jsx";
 import Products from "./pages/Products.jsx";
@@ -24,7 +24,7 @@ function AppLayout() {
         <main className="flex-1 p-8 overflow-x-hidden page-enter">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/live" element={<LiveDetection />} />
+            <Route path="/live" element={<Monitoring />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/verification" element={<Verification />} />
             <Route path="/products" element={<Products />} />
