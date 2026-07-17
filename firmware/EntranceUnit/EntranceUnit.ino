@@ -14,10 +14,56 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <time.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <ArduinoJson.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+unsigned long lastOledUpdate = 0;
+unsigned long displayMessageUntil = 0;
+
+void showOLEDMessage(const String& title, const String& msg, int durationMs = 3000) {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.println("Smart Inventory");
+  display.println("---------------------");
+  display.setTextSize(1);
+  display.println(title);
+  display.println();
+  display.setTextSize(1);
+  display.println(msg);
+  display.display();
+  displayMessageUntil = millis() + durationMs;
+}
+
+void updateOLEDIdle() {
+  if (millis() < displayMessageUntil) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.println("Smart Inventory");
+  display.println("---------------------");
+  display.println("Unit: Entrance");
+  display.print("IP: ");
+  display.println(WiFi.localIP().toString());
+  display.print("Time: ");
+  display.println(getTimeString());
+  display.println();
+  display.println("Scan RFID Card...");
+  display.display();
+}
 
 // ---------------- WiFi ----------------
-const char* WIFI_SSID     = "Wisright";
-const char* WIFI_PASSWORD = "26488668";
+const char* WIFI_SSID     = "Vishali";
+const char* WIFI_PASSWORD = "9884727652";
 
 // ---------------- Backend ----------------
 // Routed through the dashboard's own nginx proxy (same host that already
@@ -235,9 +281,12 @@ bool tryRFID(int ssPin, int rstPin, int sckPin, int misoPin, int mosiPin) {
 }
 
 void handleTap(const String& uid) {
+  showOLEDMessage("RFID Scan Status", "Verifying...\nUID: " + uid, 5000);
+
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi not connected, cannot reach backend.");
     addScanLog(uid, "Scan", "No WiFi");
+    showOLEDMessage("ACCESS DENIED", "WiFi Disconnected", 3000);
     return;
   }
 
@@ -248,6 +297,14 @@ void handleTap(const String& uid) {
   if (code == 200) {
     Serial.println("LOGIN OK  -> " + response);
     addScanLog(uid, "Check-in", "Success");
+    
+    String empName = "Employee";
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, response);
+    if (!err && doc.containsKey("employee") && doc["employee"].containsKey("name")) {
+      empName = doc["employee"]["name"].as<String>();
+    }
+    showOLEDMessage("CHECK-IN SUCCESS", "Welcome,\n" + empName, 3000);
     return;
   }
 
@@ -257,9 +314,18 @@ void handleTap(const String& uid) {
     if (code == 200) {
       Serial.println("LOGOUT OK -> " + response);
       addScanLog(uid, "Check-out", "Success");
+      
+      String empName = "Employee";
+      JsonDocument doc;
+      DeserializationError err = deserializeJson(doc, response);
+      if (!err && doc.containsKey("employee") && doc["employee"].containsKey("name")) {
+        empName = doc["employee"]["name"].as<String>();
+      }
+      showOLEDMessage("CHECK-OUT SUCCESS", "Goodbye,\n" + empName, 3000);
     } else {
       Serial.println("Logout failed (HTTP " + String(code) + "): " + response);
       addScanLog(uid, "Check-out", "Failed (" + String(code) + ")");
+      showOLEDMessage("CHECK-OUT FAILED", "Error: " + String(code), 3000);
     }
     return;
   }
@@ -267,11 +333,13 @@ void handleTap(const String& uid) {
   if (code == 404) {
     Serial.println("Unregistered card: " + uid);
     addScanLog(uid, "Scan", "Unregistered (404)");
+    showOLEDMessage("ACCESS DENIED", "Unregistered Card\nUID: " + uid, 3000);
     return;
   }
 
   Serial.println("Backend error (HTTP " + String(code) + "): " + response);
   addScanLog(uid, "Scan", "Error (" + String(code) + ")");
+  showOLEDMessage("ERROR", "Code: " + String(code), 3000);
 }
 
 void setup() {
@@ -279,13 +347,24 @@ void setup() {
   delay(500);
   Serial.println("\n==== Entrance Unit Booting ====");
 
-  bool rfidDetected = false;
-  // Try config 1: standard wiring
-  if (tryRFID(5, 22, 18, 19, 23)) {
-    rfidDetected = true;
+  // Initialize I2C OLED display
+  Wire.begin(21, 17);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+  } else {
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    display.println("Smart Inventory");
+    display.println("---------------------");
+    display.println("Booting...");
+    display.display();
   }
-  // Try config 2: standalone wiring
-  else if (tryRFID(15, 21, 18, 19, 23)) {
+
+  bool rfidDetected = false;
+  // Try config 1: standard wiring (RC522 SS=5, RST=22)
+  if (tryRFID(5, 22, 18, 19, 23)) {
     rfidDetected = true;
   }
 
@@ -303,6 +382,17 @@ void setup() {
   Serial.print(WIFI_SSID);
   Serial.println("\"");
 
+  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Smart Inventory");
+    display.println("---------------------");
+    display.println("Connecting WiFi...");
+    display.print("SSID: ");
+    display.println(WIFI_SSID);
+    display.display();
+  }
+
   unsigned long wifiStart = millis();
   const unsigned long WIFI_TIMEOUT_MS = 20000; // give up and retry after 20s
   while (WiFi.status() != WL_CONNECTED) {
@@ -312,8 +402,6 @@ void setup() {
       Serial.println();
       Serial.print("WiFi connect failed, status code: ");
       Serial.println(WiFi.status());
-      // 1=NO_SSID_AVAIL (SSID not found - check name/2.4GHz band),
-      // 4=CONNECT_FAILED (wrong password), 6=DISCONNECTED
       Serial.println("Retrying...");
       WiFi.disconnect(true);
       delay(500);
@@ -326,6 +414,18 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.print("Reporting to backend at ");
   Serial.println(backendUrl(""));
+
+  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Smart Inventory");
+    display.println("---------------------");
+    display.println("WiFi Connected!");
+    display.print("IP: ");
+    display.println(WiFi.localIP().toString());
+    display.display();
+    delay(1500);
+  }
 
   // Sync wall-clock time so scan-log entries show a real time of day
   // (IST, UTC+5:30) instead of seconds-since-boot.
@@ -352,6 +452,7 @@ void setup() {
   lastHeartbeat = millis();
 
   Serial.println("Entrance Unit ready. Waiting for RFID taps...");
+  updateOLEDIdle();
 }
 
 void loop() {
@@ -361,6 +462,12 @@ void loop() {
   if (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL) {
     sendHeartbeat();
     lastHeartbeat = millis();
+  }
+
+  // Periodic OLED idle update
+  if (millis() - lastOledUpdate >= 1000) {
+    updateOLEDIdle();
+    lastOledUpdate = millis();
   }
 
   if (!rfid || !rfid->PICC_IsNewCardPresent() || !rfid->PICC_ReadCardSerial()) {
