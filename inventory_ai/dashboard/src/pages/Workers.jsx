@@ -18,8 +18,10 @@ function todayStr() {
 }
 
 function initials(name) {
+  if (!name || typeof name !== "string") return "?";
   return name
     .split(" ")
+    .filter(Boolean)
     .map((p) => p[0])
     .slice(0, 2)
     .join("")
@@ -57,28 +59,44 @@ export default function Workers() {
     // Attempt load from monitor node API
     monitorApi.get("/employees")
       .then((res) => {
-        const stored = localStorage.getItem("local-employees");
-        const localList = stored ? JSON.parse(stored) : [];
+        let localList = [];
+        try {
+          const stored = localStorage.getItem("local-employees");
+          localList = stored ? JSON.parse(stored) : [];
+          if (!Array.isArray(localList)) localList = [];
+        } catch (e) {
+          console.error("Error parsing local-employees:", e);
+        }
         
         // Map database list to uniform employee object
-        const combined = res.map(e => ({
-          name: e.name,
-          emp_id: e.emp_id,
-          rfid_tag: e.rfid_tag,
-          department: e.department,
-          room: e.shift || "Room 1", // use shift as Home Room
-          status: "Active"
-        }));
+        const combined = Array.isArray(res)
+          ? res.map(e => ({
+              name: e.name || "Unknown Employee",
+              emp_id: e.emp_id || "UNKNOWN",
+              rfid_tag: e.rfid_tag || "UNKNOWN",
+              department: e.department || "Staff",
+              room: e.shift || "Room 1", // use shift as Home Room
+              status: "Active"
+            }))
+          : [];
 
         localList.forEach((localItem) => {
-          if (!combined.some(w => w.emp_id === localItem.emp_id)) {
-            combined.push(localItem);
+          if (localItem && localItem.emp_id && !combined.some(w => w.emp_id === localItem.emp_id)) {
+            combined.push({
+              name: localItem.name || "Unknown Employee",
+              emp_id: localItem.emp_id,
+              rfid_tag: localItem.rfid_tag || "UNKNOWN",
+              department: localItem.department || "Staff",
+              room: localItem.room || "Room 1",
+              status: localItem.status || "Active"
+            });
           }
         });
 
         setWorkers(combined);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Error loading employees:", err);
         // Fallback mockup list if offline or database empty
         const defaultMock = [
           { name: "Vishali Nair", emp_id: "EMP-101", rfid_tag: "4E500E06", department: "Picker", room: "Room 1", status: "Active" },
@@ -89,12 +107,26 @@ export default function Workers() {
           { name: "Meena Iyer", emp_id: "EMP-106", rfid_tag: "1B9E4D22", department: "Picker", room: "Room 3", status: "Inactive" }
         ];
 
-        const stored = localStorage.getItem("local-employees");
-        const localList = stored ? JSON.parse(stored) : [];
+        let localList = [];
+        try {
+          const stored = localStorage.getItem("local-employees");
+          localList = stored ? JSON.parse(stored) : [];
+          if (!Array.isArray(localList)) localList = [];
+        } catch (e) {
+          console.error("Error parsing local-employees in fallback:", e);
+        }
+
         const combined = [...defaultMock];
         localList.forEach((localItem) => {
-          if (!combined.some(w => w.emp_id === localItem.emp_id)) {
-            combined.push(localItem);
+          if (localItem && localItem.emp_id && !combined.some(w => w.emp_id === localItem.emp_id)) {
+            combined.push({
+              name: localItem.name || "Unknown Employee",
+              emp_id: localItem.emp_id,
+              rfid_tag: localItem.rfid_tag || "UNKNOWN",
+              department: localItem.department || "Staff",
+              room: localItem.room || "Room 1",
+              status: localItem.status || "Active"
+            });
           }
         });
         setWorkers(combined);
