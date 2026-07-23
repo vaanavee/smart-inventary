@@ -13,6 +13,11 @@ async function request(path, options = {}) {
     ...options,
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem("wisright-monitor-token");
+      localStorage.removeItem("wisright-monitor-user");
+      window.location.href = "/login";
+    }
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail || `Request failed: ${res.status}`);
   }

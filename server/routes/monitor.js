@@ -14,7 +14,7 @@ router.get(
     const current = await db
       .prepare(
         `SELECT date, entry_time, employee_name, emp_id, rfid_tag, room
-         FROM room_entries WHERE exit_time IS NULL ORDER BY entry_time`
+         FROM room_entries WHERE (exit_time IS NULL OR exit_time = '') ORDER BY entry_time`
       )
       .all();
 

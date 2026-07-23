@@ -51,7 +51,7 @@ router.get(
     const rows = await db
       .prepare(
         `SELECT date, entry_time, employee_name, emp_id, rfid_tag, room
-         FROM room_entries WHERE exit_time IS NULL ORDER BY entry_time`
+         FROM room_entries WHERE (exit_time IS NULL OR exit_time = '') ORDER BY entry_time`
       )
       .all();
     res.json(rows);
@@ -100,7 +100,7 @@ router.post(
     const time = fmtTime(now);
 
     const open = await db
-      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND exit_time IS NULL ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND (exit_time IS NULL OR exit_time = \'\') ORDER BY id DESC LIMIT 1')
       .get(employee.emp_id);
 
     if (open) {

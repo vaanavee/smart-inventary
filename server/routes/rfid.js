@@ -42,7 +42,7 @@ router.post(
     if (!employee) return res.status(404).json({ error: 'Unknown employee/RFID tag' });
 
     const existingOpen = await db
-      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND exit_time IS NULL ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND (exit_time IS NULL OR exit_time = \'\') ORDER BY id DESC LIMIT 1')
       .get(employee.emp_id);
     if (existingOpen) {
       return res.status(409).json({ error: `${employee.name} already has an open session in ${existingOpen.room}` });
@@ -83,7 +83,7 @@ router.post(
     if (!employee) return res.status(404).json({ error: 'Unknown employee/RFID tag' });
 
     const open = await db
-      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND exit_time IS NULL ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND (exit_time IS NULL OR exit_time = \'\') ORDER BY id DESC LIMIT 1')
       .get(employee.emp_id);
     if (!open) return res.status(409).json({ error: `${employee.name} has no open session` });
 
@@ -125,7 +125,7 @@ router.post(
     if (!employee) return res.status(404).json({ error: 'Unknown RFID tag' });
 
     const openSession = await db
-      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND exit_time IS NULL ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT * FROM room_entries WHERE emp_id = ? AND (exit_time IS NULL OR exit_time = \'\') ORDER BY id DESC LIMIT 1')
       .get(employee.emp_id);
     if (!openSession) {
       return res.status(403).json({ error: `${employee.name} is not checked in - tap the entrance reader first` });
