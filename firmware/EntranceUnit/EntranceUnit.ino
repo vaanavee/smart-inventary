@@ -26,8 +26,17 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 unsigned long lastOledUpdate = 0;
 unsigned long displayMessageUntil = 0;
+// Set once in setup(). Guards every draw so a unit with no panel wired (or a
+// failed init) just runs headless instead of writing to a dead I2C device.
+bool oledReady = false;
+
+// Defined further down, but used by updateOLEDIdle() above it. The Arduino IDE
+// auto-generates prototypes, so this is only strictly needed when the sketch is
+// built by PlatformIO/arduino-cli, which do not.
+String getTimeString();
 
 void showOLEDMessage(const String& title, const String& msg, int durationMs = 3000) {
+  if (!oledReady) return;
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
@@ -44,6 +53,7 @@ void showOLEDMessage(const String& title, const String& msg, int durationMs = 30
 }
 
 void updateOLEDIdle() {
+  if (!oledReady) return;
   if (millis() < displayMessageUntil) return;
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
@@ -168,7 +178,10 @@ int postJson(const String& url, const String& jsonBody, String& responseBody) {
 void sendHeartbeat() {
   if (WiFi.status() != WL_CONNECTED) return;
   String ipStr = WiFi.localIP().toString();
-  String body = "{\"deviceName\":\"Entrance Unit\",\"room\":\"" + String(ROOM_NAME) + "\",\"ip\":\"" + ipStr + "\"}";
+  // deviceType lets the dashboard group entrance vs rack readers explicitly
+  // instead of guessing from the device name.
+  String body = "{\"deviceName\":\"Entrance Unit\",\"deviceType\":\"entrance\",\"room\":\"" +
+                String(ROOM_NAME) + "\",\"ip\":\"" + ipStr + "\"}";
   String response;
   int code = postJson(backendUrl("/rfid/heartbeat"), body, response);
   if (code == 200) {
@@ -270,8 +283,13 @@ bool tryRFID(int ssPin, int rstPin, int sckPin, int misoPin, int mosiPin) {
   
   byte version = rfid->PCD_ReadRegister((MFRC522::PCD_Register)0x37); // VersionReg
   Serial.printf("MFRC522 Version Register: 0x%02X\n", version);
-  
-  if (version == 0x91 || version == 0x92 || version == 0x88 || version == 0x90) {
+
+  // 0x00 and 0xFF mean "nothing responded on the bus" (line stuck low/high).
+  // Anything else is a real chip answering - clone RC522 modules report
+  // version bytes outside the official 0x88/0x90/0x91/0x92 set, and rejecting
+  // those made a working reader report "not detected" while still reading
+  // cards fine (which is why the admin console showed SS/RST as "Checking...").
+  if (version != 0x00 && version != 0xFF) {
     Serial.println("RFID Reader detected successfully!");
     detectedSS = ssPin;
     detectedRST = rstPin;
@@ -301,7 +319,9 @@ void handleTap(const String& uid) {
     String empName = "Employee";
     JsonDocument doc;
     DeserializationError err = deserializeJson(doc, response);
-    if (!err && doc.containsKey("employee") && doc["employee"].containsKey("name")) {
+    // isNull() rather than the containsKey() this used to call - containsKey is
+    // deprecated in ArduinoJson 7, which is the version JsonDocument implies.
+    if (!err && !doc["employee"]["name"].isNull()) {
       empName = doc["employee"]["name"].as<String>();
     }
     showOLEDMessage("CHECK-IN SUCCESS", "Welcome,\n" + empName, 3000);
@@ -318,7 +338,7 @@ void handleTap(const String& uid) {
       String empName = "Employee";
       JsonDocument doc;
       DeserializationError err = deserializeJson(doc, response);
-      if (!err && doc.containsKey("employee") && doc["employee"].containsKey("name")) {
+      if (!err && !doc["employee"]["name"].isNull()) {
         empName = doc["employee"]["name"].as<String>();
       }
       showOLEDMessage("CHECK-OUT SUCCESS", "Goodbye,\n" + empName, 3000);
@@ -347,10 +367,13 @@ void setup() {
   delay(500);
   Serial.println("\n==== Entrance Unit Booting ====");
 
-  // Initialize I2C OLED display
+  // Initialize I2C OLED display. Done exactly once - the previous code called
+  // display.begin() again before each boot screen, re-running the full panel
+  // init (and its internal allocation) three times per boot.
   Wire.begin(21, 17);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
+  oledReady = display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  if (!oledReady) {
+    Serial.println(F("SSD1306 allocation failed - continuing without display"));
   } else {
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
@@ -382,7 +405,7 @@ void setup() {
   Serial.print(WIFI_SSID);
   Serial.println("\"");
 
-  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  if (oledReady) {
     display.clearDisplay();
     display.setCursor(0, 0);
     display.println("Smart Inventory");
@@ -415,7 +438,7 @@ void setup() {
   Serial.print("Reporting to backend at ");
   Serial.println(backendUrl(""));
 
-  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  if (oledReady) {
     display.clearDisplay();
     display.setCursor(0, 0);
     display.println("Smart Inventory");
@@ -457,6 +480,22 @@ void setup() {
 
 void loop() {
   server.handleClient();
+
+  // Reconnect if the AP dropped. Without this the unit keeps reading cards but
+  // every backend call fails until someone physically power-cycles it.
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi lost, reconnecting...");
+    WiFi.disconnect(true);
+    delay(100);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    unsigned long retryStart = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - retryStart < 15000) {
+      delay(300);
+      Serial.print(".");
+      server.handleClient();
+    }
+    Serial.println();
+  }
 
   // Periodic heartbeat
   if (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL) {

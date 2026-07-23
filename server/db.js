@@ -153,6 +153,15 @@ CREATE TABLE IF NOT EXISTS rack_scans (
   rack TEXT NOT NULL,
   time TEXT NOT NULL
 );
+
+-- A rack tap is now a SESSION, not a one-shot event: the first tap at a rack
+-- opens a row (status 'At Rack'), the next tap by the same employee at the
+-- same rack closes it with an exit_time + duration (status 'Completed').
+-- The time column keeps its original meaning as the login/arrival time, so
+-- existing rows stay valid and simply read as still-open sessions until closed.
+ALTER TABLE rack_scans ADD COLUMN IF NOT EXISTS exit_time TEXT;
+ALTER TABLE rack_scans ADD COLUMN IF NOT EXISTS duration TEXT;
+ALTER TABLE rack_scans ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'At Rack';
 `;
 
 // Demo-only default password for every seeded employee (EMP001-EMP005), so

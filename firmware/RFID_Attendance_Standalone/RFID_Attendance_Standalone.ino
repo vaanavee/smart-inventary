@@ -96,7 +96,9 @@ String getCurrentTimeString();
 String calculateDuration(unsigned long loginMs, unsigned long logoutMs);
 void handleTap(const String &uid);
 Session *currentOpenSession(int idx);
-void printStatus(int idx);
+// Takes the session to print as well as the user index - the previous
+// single-argument prototype declared a function that was never defined.
+void printStatus(int idx, Session *s);
 void handleRoot();
 void handleData();
 void handleNotFound();
@@ -334,13 +336,15 @@ void handleRoot() {
 // GET /data -> JSON used by the dashboard's JavaScript to refresh the table.
 // Returns each user's FULL session history (oldest first), not just the last one.
 void handleData() {
-  DynamicJsonDocument doc(8192);
+  // JsonDocument (v7) rather than DynamicJsonDocument - the latter is
+  // deprecated in ArduinoJson 7, which the other two sketches already target.
+  JsonDocument doc;
   JsonArray arr = doc.to<JsonArray>();
 
   for (int i = 0; i < TOTAL_USERS; i++) {
-    JsonObject obj = arr.createNestedObject();
+    JsonObject obj = arr.add<JsonObject>();
     obj["name"] = users[i].name;
-    JsonArray sessArr = obj.createNestedArray("sessions");
+    JsonArray sessArr = obj["sessions"].to<JsonArray>();
 
     int count = sessionCount[i];
     int start = (count < MAX_SESSIONS_PER_USER) ? 0 : sessionHead[i];
@@ -348,7 +352,7 @@ void handleData() {
     for (int n = 0; n < count; n++) {
       int readIdx = (start + n) % MAX_SESSIONS_PER_USER;
       Session &s = history[i][readIdx];
-      JsonObject sessObj = sessArr.createNestedObject();
+      JsonObject sessObj = sessArr.add<JsonObject>();
       sessObj["status"]   = s.status;
       sessObj["login"]    = s.loginTime;
       sessObj["logout"]   = s.logoutTime;

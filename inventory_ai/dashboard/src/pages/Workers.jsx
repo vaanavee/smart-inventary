@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Download, Plus, Users, Radio, Cpu, Contact } from "lucide-react";
+import { Search, Download, Plus, Users, Radio, Cpu, Contact, Layers } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import Badge from "../components/Badge.jsx";
 import { api } from "../api/client.js";
@@ -38,9 +38,11 @@ export default function Workers() {
   const [selectedEmpId, setSelectedEmpId] = useState("EMP-101");
   const [emp360Tab, setEmp360Tab] = useState("p-move");
 
-  // Device admin states
-  const [deviceIp, setDeviceIp] = useState(null);
-  const [deviceStatus, setDeviceStatus] = useState("offline");
+  // Device admin states. Keyed by device name so every reader that sends a
+  // heartbeat shows up - previously only "Entrance Unit" was read out of the
+  // response, so the rack reader stayed invisible even when it was online.
+  const [devices, setDevices] = useState({});
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
   // Modals state
   const [modalOpen, setModalOpen] = useState(false);
@@ -140,11 +142,16 @@ export default function Workers() {
       fetch("/monitor-api/rfid/device-status")
         .then((res) => res.json())
         .then((data) => {
-          if (data && data.devices && data.devices["Entrance Unit"]) {
-            const dev = data.devices["Entrance Unit"];
-            setDeviceIp(dev.ip);
-            setDeviceStatus(dev.status.toLowerCase());
-          }
+          const list = (data && data.devices) || {};
+          setDevices(list);
+          // Default the console to the first device that is actually online,
+          // falling back to the first known one, without clobbering a device
+          // the user has explicitly picked.
+          setSelectedDevice((prev) => {
+            if (prev && list[prev]) return prev;
+            const names = Object.keys(list);
+            return names.find((n) => list[n].status === "Online") || names[0] || null;
+          });
         })
         .catch(() => {});
     };
@@ -654,47 +661,11 @@ export default function Workers() {
 
       {/* TAB CONTENT: DEVICE ADMIN */}
       {tab === "device" && (
-        <div className="card p-0 overflow-hidden h-[600px] border border-hairline/[0.06] rounded-2xl bg-black/5">
-          {deviceIp && deviceStatus === "online" ? (
-            <iframe
-              src={`http://${deviceIp}/`}
-              title="Device Administration Console"
-              className="w-full h-full border-0"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-6 bg-surface">
-              <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 animate-pulse">
-                <Cpu size={32} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-ink">Entrance Unit Offline</h3>
-                <p className="text-muted text-sm max-w-md mt-1">
-                  This console loads the device's own admin page directly over your local network, so it
-                  only works when you're on the same WiFi as the ESP32. For login/logout and rack activity
-                  from anywhere, use the <b>RFID Activity</b> tab instead — it reads from the backend, not
-                  the device.
-                </p>
-              </div>
-              {deviceIp ? (
-                <div className="text-xs text-muted mt-2">
-                  Last known IP: <span className="font-mono bg-hairline/[0.1] px-1.5 py-0.5 rounded">{deviceIp}</span>
-                  <a
-                    href={`http://${deviceIp}/`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ml-2 text-primary hover:underline font-medium"
-                  >
-                    Force Open Console
-                  </a>
-                </div>
-              ) : (
-                <div className="text-xs text-muted mt-2">
-                  Searching network for device...
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <DeviceAdminTab
+          devices={devices}
+          selectedDevice={selectedDevice}
+          onSelect={setSelectedDevice}
+        />
       )}
 
       {/* ADD / EDIT EMPLOYEE MODAL */}
@@ -814,6 +785,143 @@ export default function Workers() {
   );
 }
 
+// Readers we expect to exist. Anything that heartbeats under a different name
+// still renders (from the live list); these entries only guarantee that a unit
+// which has NEVER checked in is shown as missing rather than silently absent —
+// that gap is exactly what hid the rack reader before.
+const EXPECTED_DEVICES = [
+  { name: "Entrance Unit", deviceType: "entrance" },
+  { name: "Rack Unit", deviceType: "rack" },
+];
+
+function DeviceAdminTab({ devices, selectedDevice, onSelect }) {
+  const rows = useMemo(() => {
+    const live = Object.entries(devices).map(([name, d]) => ({ ...d, name }));
+    const missing = EXPECTED_DEVICES.filter((e) => !devices[e.name]).map((e) => ({
+      ...e,
+      status: "Never seen",
+      ip: null,
+    }));
+    return [...live, ...missing];
+  }, [devices]);
+
+  const active = selectedDevice ? devices[selectedDevice] : null;
+  const isOnline = active && active.status === "Online" && active.ip;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {rows.map((d) => {
+          const online = d.status === "Online";
+          const selected = d.name === selectedDevice;
+          const isRack = d.deviceType === "rack";
+          return (
+            <button
+              key={d.name}
+              type="button"
+              onClick={() => d.ip && onSelect(d.name)}
+              className={`card p-5 text-left transition-all ${
+                selected ? "ring-2 ring-primary" : ""
+              } ${d.ip ? "hover:shadow-lift cursor-pointer" : "cursor-default opacity-70"}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      online ? "bg-emerald-500/10 text-emerald-500" : "bg-hairline/[0.08] text-muted"
+                    }`}
+                  >
+                    {isRack ? <Layers size={20} /> : <Cpu size={20} />}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-ink">{d.name}</p>
+                    <p className="text-xs text-muted capitalize">
+                      {isRack ? "Rack reader" : "Entrance reader"}
+                    </p>
+                  </div>
+                </div>
+                <Badge tone={online ? "success" : d.status === "Never seen" ? "warning" : "danger"}>
+                  {d.status}
+                </Badge>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted">IP address</span>
+                  <span className="font-mono text-ink">{d.ip || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Room</span>
+                  <span className="text-ink">{d.room || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Rack</span>
+                  <span className="text-ink">{d.rack || (isRack ? "—" : "n/a")}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Last heartbeat</span>
+                  <span className="text-ink">
+                    {typeof d.staleFor === "number" ? `${d.staleFor}s ago` : "—"}
+                  </span>
+                </div>
+              </div>
+
+              {d.status === "Never seen" && (
+                <p className="mt-3 text-xs text-amber-600">
+                  This unit has never sent a heartbeat. Flash the latest firmware and confirm it is on
+                  the same WiFi network.
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="card p-0 overflow-hidden h-[600px] border border-hairline/[0.06] rounded-2xl bg-black/5">
+        {isOnline ? (
+          <iframe
+            key={active.ip}
+            src={`http://${active.ip}/`}
+            title={`${selectedDevice} Administration Console`}
+            className="w-full h-full border-0"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-6 bg-surface">
+            <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 animate-pulse">
+              <Cpu size={32} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-ink">
+                {selectedDevice ? `${selectedDevice} Offline` : "No device selected"}
+              </h3>
+              <p className="text-muted text-sm max-w-md mt-1">
+                This console loads the device's own admin page directly over your local network, so it
+                only works when you're on the same WiFi as the ESP32. For login/logout and rack activity
+                from anywhere, use the <b>RFID Activity</b> tab instead — it reads from the backend, not
+                the device.
+              </p>
+            </div>
+            {active?.ip && (
+              <div className="text-xs text-muted mt-2">
+                Last known IP:{" "}
+                <span className="font-mono bg-hairline/[0.1] px-1.5 py-0.5 rounded">{active.ip}</span>
+                <a
+                  href={`http://${active.ip}/`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2 text-primary hover:underline font-medium"
+                >
+                  Force Open Console
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RfidActivityTab() {
   const [current, setCurrent] = useState([]);
   const [date, setDate] = useState(todayStr());
@@ -837,9 +945,29 @@ function RfidActivityTab() {
     monitorApi.get(`/room-entries?date=${date}`).then(setHistory).catch((e) => setError(e.message));
   }, [date]);
 
+  // A rack session with no exit_time is someone still standing at that rack.
+  const atRackCount = useMemo(() => rackScans.filter((s) => !s.exit_time).length, [rackScans]);
+
   return (
     <div className="flex flex-col gap-6">
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error &&
+        (/token/i.test(error) ? (
+          // The tab reads admin-only endpoints, so an expired JWT empties every
+          // panel below. Say that plainly instead of surfacing the raw API error,
+          // which reads as "the readers stopped working".
+          <div className="card p-4 border border-danger/30 bg-danger/5 text-sm">
+            <p className="text-danger font-medium">Your admin session expired.</p>
+            <p className="text-muted mt-1">
+              Login/logout and rack activity are hidden until you{" "}
+              <a href="/login" className="text-primary hover:underline font-medium">
+                sign in again
+              </a>
+              . The readers keep recording taps in the meantime — nothing is lost.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-danger">{error}</p>
+        ))}
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
@@ -912,36 +1040,80 @@ function RfidActivityTab() {
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-ink">Rack Activity</h3>
-          <Badge tone="info">{rackScans.length} recent</Badge>
+          <h3 className="font-semibold text-ink">Rack Login / Logoff</h3>
+          <div className="flex items-center gap-2">
+            <Badge tone="success">{atRackCount} at rack</Badge>
+            <Badge tone="info">{rackScans.length} recent</Badge>
+          </div>
         </div>
-        <p className="text-xs text-muted mb-4">Which worker went to which room and rack, and what's stocked there.</p>
-        <ul className="flex flex-col divide-y divide-hairline/[0.05]">
-          {rackScans.map((s) => (
-            <li key={s.id} className="py-3 flex flex-col gap-2 text-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-ink font-medium">{s.employee_name}</p>
-                  <p className="text-xs text-muted">{s.emp_id} • {s.rfid_tag}</p>
-                </div>
-                <div className="text-right">
-                  <Badge tone="success">{s.room} / Rack {s.rack}</Badge>
-                  <p className="text-xs text-muted mt-1">{s.date} at {s.time}</p>
-                </div>
-              </div>
-              {s.products?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {s.products.map((p) => (
-                    <span key={p.product_id} className="text-xs rounded-full bg-hairline/[0.06] px-3 py-1 text-muted">
-                      {p.name} — {p.qty} {p.unit}
-                    </span>
-                  ))}
-                </div>
+        <p className="text-xs text-muted mb-4">
+          Each rack tap is a session: the first tap logs the worker in at that rack, their next tap at the
+          same rack logs them off with the time spent there.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted text-xs uppercase tracking-wide border-b border-hairline/[0.05]">
+                <th className="pb-3 font-medium">Employee</th>
+                <th className="pb-3 font-medium">Emp ID</th>
+                <th className="pb-3 font-medium">Rack</th>
+                <th className="pb-3 font-medium">Login</th>
+                <th className="pb-3 font-medium hidden sm:table-cell">Logoff</th>
+                <th className="pb-3 font-medium hidden sm:table-cell">Duration</th>
+                <th className="pb-3 font-medium hidden md:table-cell">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rackScans.map((s) => {
+                const open = !s.exit_time;
+                return (
+                  <tr key={s.id} className="border-b border-hairline/[0.04] last:border-0 align-top">
+                    <td className="py-3">
+                      <p className="text-ink font-medium">{s.employee_name}</p>
+                      {s.products?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {s.products.map((p) => (
+                            <span
+                              key={p.product_id}
+                              className="text-[11px] rounded-full bg-hairline/[0.06] px-2 py-0.5 text-muted"
+                            >
+                              {p.name} — {p.qty} {p.unit}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 text-muted">
+                      <p>{s.emp_id}</p>
+                      <p className="text-xs font-mono">{s.rfid_tag}</p>
+                    </td>
+                    <td className="py-3">
+                      <Badge tone={open ? "success" : "neutral"}>
+                        {s.room} / {s.rack}
+                      </Badge>
+                    </td>
+                    <td className="py-3 text-muted">
+                      <p>{s.time}</p>
+                      <p className="text-xs">{s.date}</p>
+                    </td>
+                    <td className="py-3 text-muted hidden sm:table-cell">{s.exit_time || "—"}</td>
+                    <td className="py-3 text-muted hidden sm:table-cell">{s.duration || "—"}</td>
+                    <td className="py-3 hidden md:table-cell">
+                      <Badge tone={open ? "info" : "success"}>{s.status || (open ? "At Rack" : "Completed")}</Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+              {rackScans.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-muted">
+                    No rack taps recorded yet.
+                  </td>
+                </tr>
               )}
-            </li>
-          ))}
-          {rackScans.length === 0 && <li className="py-3 text-sm text-muted">No rack taps recorded yet.</li>}
-        </ul>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
